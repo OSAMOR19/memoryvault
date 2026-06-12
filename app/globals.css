@@ -1,0 +1,185 @@
+/* ========================================
+   MemoryVault — Global Styles
+   Design System + Reset + Utilities
+   ======================================== */
+
+/* ── Reset ────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1A1A1A;
+  background-color: #FAF8F5;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: inherit;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: #1A1A1A;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+::selection {
+  background: #E8D5B0;
+  color: #1A1A1A;
+}
+
+/* ── Scrollbar ──────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #9E9E9E;
+  border-radius: 9999px;
+}
+
+/* ── Focus ──────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #C9A86A;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Accessibility ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Keyframe Animations ────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 106, 0.3); }
+  50%      { box-shadow: 0 0 20px 4px rgba(201, 168, 106, 0.15); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes waxStamp {
+  0%   { opacity: 0; transform: scale(2.5) rotate(-30deg); }
+  60%  { opacity: 1; transform: scale(0.9) rotate(5deg); }
+  80%  { transform: scale(1.05) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%      { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+@keyframes envelopeOpen {
+  0%   { transform: rotateX(0deg); }
+  100% { transform: rotateX(-180deg); }
+}

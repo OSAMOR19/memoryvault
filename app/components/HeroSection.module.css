@@ -1,0 +1,276 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+  gap: 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #E8D5B0;
+  opacity: 0;
+  animation: float 6s ease-in-out infinite, fadeIn 2s ease-out forwards;
+}
+
+.content {
+  flex: 1;
+  max-width: 560px;
+  position: relative;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(201, 168, 106, 0.08);
+  border: 1px solid rgba(201, 168, 106, 0.15);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #A8894F;
+  margin-bottom: 32px;
+  animation: fadeInUp 600ms ease-out both;
+}
+
+.heading {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #1A1A1A;
+  margin-bottom: 24px;
+  animation: fadeInUp 600ms ease-out 100ms both;
+}
+
+.headingEm {
+  font-style: italic;
+  color: #C9A86A;
+}
+
+.subheading {
+  font-size: 1.125rem;
+  color: #6B6B6B;
+  line-height: 1.7;
+  max-width: 440px;
+  margin-bottom: 40px;
+  animation: fadeInUp 600ms ease-out 200ms both;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 48px;
+  animation: fadeInUp 600ms ease-out 300ms both;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: #C9A86A;
+  color: white;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: all 200ms;
+  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.25);
+}
+
+.btnPrimary:hover {
+  background: #A8894F;
+  box-shadow: 0 6px 24px rgba(201, 168, 106, 0.35);
+  transform: translateY(-1px);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 28px;
+  background: white;
+  color: #1A1A1A;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  border: 1.5px solid #F3F0EB;
+  transition: all 200ms;
+}
+
+.btnSecondary:hover {
+  border-color: #E8D5B0;
+  box-shadow: 0 2px 12px rgba(26, 26, 26, 0.04);
+}
+
+.stats {
+  display: flex;
+  gap: 32px;
+  animation: fadeInUp 600ms ease-out 400ms both;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  font-weight: 500;
+}
+
+.statIcon {
+  color: #C9A86A;
+}
+
+/* Capsule illustration */
+.illustration {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  animation: fadeInScale 800ms ease-out 300ms both;
+}
+
+.capsuleVisual {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capsuleOuter {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201, 168, 106, 0.08), rgba(201, 168, 106, 0.02));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.capsuleInner {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 32px rgba(201, 168, 106, 0.3), inset 0 2px 4px rgba(255,255,255,0.2);
+  animation: float 6s ease-in-out infinite;
+}
+
+.capsuleRing1,
+.capsuleRing2,
+.capsuleRing3 {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 168, 106, 0.1);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.capsuleRing1 {
+  width: 200px;
+  height: 200px;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.capsuleRing2 {
+  width: 260px;
+  height: 260px;
+  animation: pulse 4s ease-in-out infinite 0.5s;
+}
+
+.capsuleRing3 {
+  width: 320px;
+  height: 320px;
+  animation: pulse 4s ease-in-out infinite 1s;
+}
+
+@media (max-width: 960px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 140px 24px 60px;
+    gap: 48px;
+  }
+
+  .heading {
+    font-size: 2.5rem;
+  }
+
+  .subheading {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stats {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .capsuleVisual {
+    width: 240px;
+    height: 240px;
+  }
+
+  .capsuleOuter {
+    width: 120px;
+    height: 120px;
+  }
+
+  .capsuleInner {
+    width: 80px;
+    height: 80px;
+  }
+
+  .capsuleRing1 { width: 160px; height: 160px; }
+  .capsuleRing2 { width: 200px; height: 200px; }
+  .capsuleRing3 { width: 240px; height: 240px; }
+}
+
+@media (max-width: 480px) {
+  .heading {
+    font-size: 2rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btnPrimary, .btnSecondary {
+    width: 100%;
+    justify-content: center;
+  }
+}

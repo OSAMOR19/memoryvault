@@ -1,0 +1,184 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 16px 0;
+  transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: transparent;
+}
+
+.navScrolled {
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(201, 168, 106, 0.08);
+  padding: 12px 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #1A1A1A;
+}
+
+.logoIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.25);
+}
+
+.logoText {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.desktopLinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B6B6B;
+  transition: color 150ms;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: #1A1A1A;
+}
+
+.btnSecondary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: 1.5px solid #F3F0EB;
+  background: white;
+  transition: all 150ms;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  border-color: #E8D5B0;
+  box-shadow: 0 2px 8px rgba(26, 26, 26, 0.04);
+}
+
+.btnPrimary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  padding: 8px 24px;
+  border-radius: 9999px;
+  background: #C9A86A;
+  transition: all 150ms;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.25);
+}
+
+.btnPrimary:hover {
+  background: #A8894F;
+  box-shadow: 0 4px 12px rgba(201, 168, 106, 0.35);
+}
+
+.menuToggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #1A1A1A;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menuToggle:hover {
+  background: #F3F0EB;
+}
+
+.mobileMenu {
+  display: none;
+  flex-direction: column;
+  padding: 16px 24px 24px;
+  gap: 4px;
+  animation: fadeInDown 200ms ease-out;
+}
+
+.mobileLink {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #1A1A1A;
+  padding: 12px 0;
+  text-decoration: none;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mobileLink:hover {
+  color: #C9A86A;
+}
+
+.mobileDivider {
+  height: 1px;
+  background: #F3F0EB;
+  margin: 8px 0;
+}
+
+.mobileCta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: #C9A86A;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-top: 8px;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .desktopLinks {
+    display: none;
+  }
+
+  .menuToggle {
+    display: flex;
+  }
+
+  .mobileMenu {
+    display: flex;
+  }
+}

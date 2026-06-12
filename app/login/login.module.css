@@ -1,0 +1,579 @@
+/* ── Login Page Styles ── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Layout ── */
+.page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #FAF8F5;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+}
+
+/* ── Left Branding Panel ── */
+.brandPanel {
+  display: none;
+  width: 50%;
+  max-width: 640px;
+  background: linear-gradient(165deg, #FAF8F5 0%, #F3F0EB 40%, #EBE6DF 100%);
+  padding: 64px;
+  position: relative;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.brandPanelInner {
+  position: relative;
+  z-index: 2;
+  animation: fadeIn 1s ease-out;
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.brandLogoIcon {
+  width: 44px;
+  height: 44px;
+  background: #C9A86A;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.3);
+}
+
+.brandName {
+  font-size: 42px;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin: 0 0 16px 0;
+}
+
+.brandTagline {
+  font-size: 20px;
+  color: #6B6B6B;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0 0 56px 0;
+  font-style: italic;
+}
+
+.brandFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.brandFeature {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brandFeatureIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(201, 168, 106, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C9A86A;
+  flex-shrink: 0;
+}
+
+.brandFeatureText {
+  font-size: 15px;
+  color: #6B6B6B;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* Decorative floating icons */
+.decorativeIcons {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.decorIcon {
+  position: absolute;
+  color: rgba(201, 168, 106, 0.08);
+  animation: floatIcon 6s ease-in-out infinite;
+}
+
+.decorIcon1 {
+  top: 10%;
+  right: 15%;
+  animation-delay: 0s;
+}
+
+.decorIcon2 {
+  top: 40%;
+  right: 8%;
+  animation-delay: 1.5s;
+}
+
+.decorIcon3 {
+  bottom: 20%;
+  right: 20%;
+  animation-delay: 3s;
+}
+
+.decorIcon4 {
+  bottom: 10%;
+  right: 40%;
+  animation-delay: 4.5s;
+}
+
+/* ── Right Form Panel ── */
+.formPanel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 440px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Mobile logo */
+.mobileLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.mobileLogoIcon {
+  width: 36px;
+  height: 36px;
+  background: #C9A86A;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(201, 168, 106, 0.25);
+}
+
+.mobileLogoText {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: -0.5px;
+}
+
+/* ── Card ── */
+.card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 4px 24px rgba(26, 26, 26, 0.06);
+}
+
+.cardHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.cardTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.cardSubtitle {
+  font-size: 15px;
+  color: #9E9E9E;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ── Social Buttons ── */
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E8E4DF;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.socialButton:hover {
+  background: #F9F7F4;
+  border-color: #D4CFC8;
+  box-shadow: 0 2px 8px rgba(26, 26, 26, 0.04);
+}
+
+.socialButton:active {
+  transform: scale(0.985);
+}
+
+.socialIcon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #E8E4DF;
+}
+
+.dividerText {
+  font-size: 13px;
+  color: #9E9E9E;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* ── Form ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: 0.3px;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  color: #9E9E9E;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  background: #F3F0EB;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #1A1A1A;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #9E9E9E;
+}
+
+.input:focus {
+  background: #FFFFFF;
+  border-color: #C9A86A;
+  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.12);
+}
+
+.input:focus ~ .inputIcon,
+.inputWrapper:focus-within .inputIcon {
+  color: #C9A86A;
+}
+
+.inputError {
+  border-color: #D4644A;
+}
+
+.inputError:focus {
+  border-color: #D4644A;
+  box-shadow: 0 0 0 3px rgba(212, 100, 74, 0.12);
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9E9E9E;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: #6B6B6B;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #D4644A;
+  margin: 0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Remember Me / Forgot ── */
+.formOptions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -4px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6B6B6B;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid #D4CFC8;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background: #FFFFFF;
+}
+
+.checkbox:checked {
+  background: #C9A86A;
+  border-color: #C9A86A;
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #FFFFFF;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.forgotLink {
+  font-size: 14px;
+  color: #C9A86A;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.forgotLink:hover {
+  color: #A8894F;
+}
+
+/* ── Submit Button ── */
+.submitButton {
+  width: 100%;
+  padding: 15px 24px;
+  background: #C9A86A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.3);
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #A8894F;
+  box-shadow: 0 6px 20px rgba(168, 137, 79, 0.35);
+  transform: translateY(-1px);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── Global Error ── */
+.globalError {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(212, 100, 74, 0.06);
+  border: 1px solid rgba(212, 100, 74, 0.15);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #D4644A;
+  font-weight: 500;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.globalErrorIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Footer ── */
+.footerText {
+  text-align: center;
+  margin-top: 28px;
+  font-size: 15px;
+  color: #9E9E9E;
+}
+
+.footerLink {
+  color: #C9A86A;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: #A8894F;
+}
+
+/* ── Responsive ── */
+@media (min-width: 960px) {
+  .brandPanel {
+    display: flex;
+  }
+
+  .mobileLogo {
+    display: none;
+  }
+
+  .card {
+    padding: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 28px 24px;
+    border-radius: 12px;
+  }
+
+  .cardTitle {
+    font-size: 22px;
+  }
+
+  .formOptions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .forgotLink {
+    align-self: flex-end;
+    margin-top: -4px;
+  }
+}

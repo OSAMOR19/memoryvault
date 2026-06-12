@@ -1,0 +1,152 @@
+.section {
+  padding: 120px 24px;
+  background: #FAF8F5;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4F6D5A;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #1A1A1A;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 1.0625rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+}
+
+.step {
+  text-align: center;
+  padding: 0 20px;
+  position: relative;
+}
+
+.stepNumber {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #C9A86A;
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+}
+
+.stepLine {
+  position: absolute;
+  top: 78px;
+  left: 60%;
+  right: -40%;
+  height: 1px;
+  background: linear-gradient(90deg, #E8D5B0, rgba(232, 213, 176, 0.2));
+}
+
+.step:last-child .stepLine {
+  display: none;
+}
+
+.stepIconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid rgba(201, 168, 106, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4F6D5A;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 12px rgba(26, 26, 26, 0.04);
+  position: relative;
+  z-index: 1;
+}
+
+.stepTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.stepDesc {
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 80px 24px;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .step {
+    display: flex;
+    text-align: left;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 0;
+  }
+
+  .stepIconWrap {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .stepLine {
+    display: none;
+  }
+
+  .stepNumber {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    background: #C9A86A;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    z-index: 2;
+    margin: 0;
+  }
+}
