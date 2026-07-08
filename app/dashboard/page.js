@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Plus,
@@ -17,6 +17,8 @@ import {
   Mail,
   Sparkles,
   Package,
+  Home,
+  User,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
 
@@ -40,8 +42,11 @@ export default function DashboardPage() {
   const [capsules, setCapsules] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Check auth
@@ -49,6 +54,12 @@ export default function DashboardPage() {
     if (!auth) {
       router.push("/login");
       return;
+    }
+
+    try {
+      setUser(JSON.parse(auth));
+    } catch {
+      setUser(null);
     }
 
     loadCapsules();
@@ -139,6 +150,38 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      {/* ── Mobile Top Bar ── */}
+      <header className={styles.mobileTopBar}>
+        <Link href="/dashboard" className={styles.mobileTopBarLogo}>
+          <div className={styles.logoIcon}>
+            <Lock size={14} strokeWidth={2.5} />
+          </div>
+          <span className={styles.logoText}>MemoryVault</span>
+        </Link>
+        <div className={styles.mobileTopBarRight}>
+          <button
+            className={styles.mobileTopBarAvatar}
+            onClick={() => setProfileOpen(!profileOpen)}
+            aria-label="Toggle profile menu"
+          >
+            {user?.name ? user.name[0].toUpperCase() : "U"}
+          </button>
+          {profileOpen && (
+            <div className={styles.mobileProfileDropdown}>
+              <div className={styles.dropdownHeader}>
+                <p className={styles.dropdownName}>{user?.name || "User"}</p>
+                <p className={styles.dropdownEmail}>{user?.email || "No email"}</p>
+              </div>
+              <div className={styles.dropdownDivider} />
+              <button className={styles.dropdownItem} onClick={handleLogout}>
+                <LogOut size={14} />
+                <span>Log Out</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
@@ -178,11 +221,69 @@ export default function DashboardPage() {
               {capsules.length} capsule{capsules.length !== 1 ? "s" : ""} in your vault
             </p>
           </div>
-          <Link href="/create" className={styles.createBtn}>
-            <Plus size={18} />
-            Create Capsule
-          </Link>
+          <div className={styles.headerActions}>
+            <Link href="/create" className={styles.createBtn}>
+              <Plus size={18} />
+              Create Capsule
+            </Link>
+
+            <div className={styles.profileContainer}>
+              <button
+                className={styles.profileBadge}
+                onClick={() => setProfileOpen(!profileOpen)}
+                aria-label="Toggle profile menu"
+              >
+                <div className={styles.avatar}>
+                  {user?.name ? user.name[0].toUpperCase() : "U"}
+                </div>
+                <span className={styles.profileName}>{user?.name || "User"}</span>
+              </button>
+
+              {profileOpen && (
+                <div className={styles.profileDropdown}>
+                  <div className={styles.dropdownHeader}>
+                    <p className={styles.dropdownName}>{user?.name || "User"}</p>
+                    <p className={styles.dropdownEmail}>{user?.email || "No email available"}</p>
+                  </div>
+                  <div className={styles.dropdownDivider} />
+                  <button className={styles.dropdownItem} onClick={handleLogout}>
+                    <LogOut size={14} />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </header>
+
+        {/* Stats Cards */}
+        <div className={styles.statsGrid}>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>Total Capsules</span>
+            <span className={styles.statsValue}>{capsules.length}</span>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>Sealed</span>
+            <span className={styles.statsValue}>
+              {capsules.filter(c => {
+                const st = getEffectiveStatus(c);
+                return st === "sealed" || st === "soon";
+              }).length}
+            </span>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>Ready to Open</span>
+            <span className={styles.statsValue}>
+              {capsules.filter(c => getEffectiveStatus(c) === "unlockable").length}
+            </span>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>Opened</span>
+            <span className={styles.statsValue}>
+              {capsules.filter(c => getEffectiveStatus(c) === "opened").length}
+            </span>
+          </div>
+        </div>
 
         {/* Filters + Search */}
         <div className={styles.toolbar}>
@@ -268,10 +369,27 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Mobile FAB */}
-      <Link href="/create" className={styles.fab}>
-        <Plus size={24} />
-      </Link>
+      {/* ── Mobile Bottom Nav ── */}
+      <nav className={styles.bottomNav}>
+        <Link
+          href="/dashboard"
+          className={`${styles.bottomNavItem} ${pathname === "/dashboard" ? styles.bottomNavItemActive : ""}`}
+        >
+          <Home size={20} />
+          <span>Home</span>
+        </Link>
+        <Link href="/create" className={`${styles.bottomNavItem} ${pathname === "/create" ? styles.bottomNavItemActive : ""}`}>
+          <Plus size={20} />
+          <span>Create</span>
+        </Link>
+        <button
+          className={`${styles.bottomNavItem} ${profileOpen ? styles.bottomNavItemActive : ""}`}
+          onClick={() => setProfileOpen(!profileOpen)}
+        >
+          <User size={20} />
+          <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 }
