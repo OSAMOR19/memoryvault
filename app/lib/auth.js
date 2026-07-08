@@ -57,8 +57,29 @@ export async function signUp({ name, email, password }) {
     return { success: false, error: error.message };
   }
 
+  // If Supabase has email confirmation enabled but returns a user with no
+  // identities, the email already exists (duplicate signup attempt).
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    return { success: false, error: 'An account with this email already exists' };
+  }
+
+  // If there's a session, user is auto-confirmed and logged in
+  if (data.session) {
+    return {
+      success: true,
+      user: {
+        id: data.user.id,
+        name: name.trim(),
+        email: data.user.email,
+        createdAt: data.user.created_at,
+      },
+    };
+  }
+
+  // No session = email confirmation is required
   return {
     success: true,
+    needsConfirmation: true,
     user: {
       id: data.user.id,
       name: name.trim(),

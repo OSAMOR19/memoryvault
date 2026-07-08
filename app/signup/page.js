@@ -87,8 +87,14 @@ export default function SignupPage() {
     try {
       const result = await signUp({ name, email, password });
 
-      if (result.success) {
+      if (result.success && !result.needsConfirmation) {
         router.push('/dashboard');
+      } else if (result.success && result.needsConfirmation) {
+        setGlobalError('');
+        setIsLoading(false);
+        // Show confirmation message — user must verify email
+        alert('Account created! Please check your email to confirm your account, then log in.');
+        router.push('/login');
       } else {
         setGlobalError(result.error);
         setIsLoading(false);

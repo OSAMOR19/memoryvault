@@ -24,6 +24,8 @@ import {
   Plus,
   Info,
 } from 'lucide-react';
+import { getSession, logOut, updateProfile, changePassword, deleteAccount } from '../lib/auth';
+import { getCapsules, getEffectiveStatus } from '../lib/storage';
 import styles from './profile.module.css';
 
 export default function ProfilePage() {
@@ -55,82 +57,60 @@ export default function ProfilePage() {
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
-    const auth = localStorage.getItem('memoryvault_auth');
-    if (!auth) {
-      router.push('/login');
-      return;
-    }
+    (async () => {
+      const session = await getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
 
-    try {
-      const parsed = JSON.parse(auth);
-      setUser(parsed);
-      setNewName(parsed.name || '');
-    } catch {
-      router.push('/login');
-      return;
-    }
+      setUser(session);
+      setNewName(session.name || '');
 
-    // Load stats from capsules
-    try {
-      const capsules = JSON.parse(localStorage.getItem('memoryvault_capsules') || '[]');
-      const now = new Date();
-      let sealed = 0, opened = 0, ready = 0, photos = 0;
+      // Load stats from capsules
+      try {
+        const capsules = await getCapsules();
+        const now = new Date();
+        let sealed = 0, opened = 0, ready = 0, photos = 0;
 
-      capsules.forEach(c => {
-        if (c.status === 'opened') {
-          opened++;
-        } else {
-          const unlockDate = new Date(c.unlockDate);
-          if (unlockDate <= now) {
-            ready++;
-          } else {
-            sealed++;
-          }
-        }
-        if (c.photos) photos += c.photos.length;
-      });
+        capsules.forEach(c => {
+          const st = getEffectiveStatus(c);
+          if (st === 'opened') opened++;
+          else if (st === 'unlockable') ready++;
+          else sealed++;
+          if (c.photos) photos += c.photos.length;
+        });
 
-      setStats({ total: capsules.length, sealed, opened, ready, photos });
-    } catch {
-      setStats({ total: 0, sealed: 0, opened: 0, ready: 0, photos: 0 });
-    }
+        setStats({ total: capsules.length, sealed, opened, ready, photos });
+      } catch {
+        setStats({ total: 0, sealed: 0, opened: 0, ready: 0, photos: 0 });
+      }
 
-    setIsLoaded(true);
+      setIsLoaded(true);
+    })();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('memoryvault_auth');
+  const handleLogout = async () => {
+    await logOut();
     router.push('/login');
   };
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (!newName.trim() || newName.trim().length < 2) return;
 
-    // Update auth session
-    const updated = { ...user, name: newName.trim() };
-    localStorage.setItem('memoryvault_auth', JSON.stringify(updated));
-
-    // Update user store
-    try {
-      const users = JSON.parse(localStorage.getItem('memoryvault_user') || '[]');
-      const idx = users.findIndex(u => u.id === user.id);
-      if (idx >= 0) {
-        users[idx].name = newName.trim();
-        localStorage.setItem('memoryvault_user', JSON.stringify(users));
-      }
-    } catch {}
-
-    setUser(updated);
-    setEditingName(false);
-    setNameSuccess('Name updated successfully');
-    setTimeout(() => setNameSuccess(''), 3000);
+    const result = await updateProfile(user.id, { name: newName.trim() });
+    if (result.success) {
+      setUser({ ...user, name: newName.trim() });
+      setEditingName(false);
+      setNameSuccess('Name updated successfully');
+      setTimeout(() => setNameSuccess(''), 3000);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPasswordError('');
     setPasswordSuccess('');
 
-    if (!currentPassword) { setPasswordError('Current password is required'); return; }
     if (!newPassword) { setPasswordError('New password is required'); return; }
     if (newPassword.length < 8) { setPasswordError('Password must be at least 8 characters'); return; }
     if (!/[A-Z]/.test(newPassword)) { setPasswordError('Password must contain an uppercase letter'); return; }
@@ -138,60 +118,27 @@ export default function ProfilePage() {
     if (!/[0-9]/.test(newPassword)) { setPasswordError('Password must contain a number'); return; }
     if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match'); return; }
 
-    // Verify current password using the same hash function from auth.js
-    function simpleHash(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-      return hash.toString(36);
-    }
-
-    try {
-      const users = JSON.parse(localStorage.getItem('memoryvault_user') || '[]');
-      const idx = users.findIndex(u => u.id === user.id);
-      if (idx < 0) { setPasswordError('User not found'); return; }
-
-      if (users[idx].passwordHash !== simpleHash(currentPassword)) {
-        setPasswordError('Current password is incorrect');
-        return;
-      }
-
-      users[idx].passwordHash = simpleHash(newPassword);
-      localStorage.setItem('memoryvault_user', JSON.stringify(users));
-
+    const result = await changePassword(newPassword);
+    if (result.success) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setShowPasswordForm(false);
       setPasswordSuccess('Password changed successfully');
       setTimeout(() => setPasswordSuccess(''), 3000);
-    } catch {
-      setPasswordError('Something went wrong. Please try again.');
+    } else {
+      setPasswordError(result.error || 'Something went wrong. Please try again.');
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (deleteText !== 'DELETE') return;
-
-    // Remove user from users list
-    try {
-      const users = JSON.parse(localStorage.getItem('memoryvault_user') || '[]');
-      const filtered = users.filter(u => u.id !== user.id);
-      localStorage.setItem('memoryvault_user', JSON.stringify(filtered));
-    } catch {}
-
-    // Remove capsules and auth
-    localStorage.removeItem('memoryvault_capsules');
-    localStorage.removeItem('memoryvault_auth');
-
+    await deleteAccount(user.id);
     router.push('/login');
   };
 
-  const memberSince = user?.loggedInAt
-    ? new Date(user.createdAt || user.loggedInAt).toLocaleDateString('en-US', {
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString('en-US', {
         month: 'long', year: 'numeric',
       })
     : '';
@@ -346,25 +293,6 @@ export default function ProfilePage() {
             </button>
           ) : (
             <div className={styles.passwordForm}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Current Password</label>
-                <div className={styles.passwordWrap}>
-                  <input
-                    type={showCurrentPw ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className={styles.fieldInput}
-                    placeholder="Enter current password"
-                  />
-                  <button
-                    className={styles.pwToggle}
-                    onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    type="button"
-                  >
-                    {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
 
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>New Password</label>
