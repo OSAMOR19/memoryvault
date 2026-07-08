@@ -34,10 +34,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Redirect if already logged in
-    if (isAuthenticated()) {
-      router.push('/dashboard');
-      return;
-    }
+    (async () => {
+      if (await isAuthenticated()) {
+        router.push('/dashboard');
+        return;
+      }
+    })();
     // Pre-fill remembered email
     const remembered = getRememberedEmail();
     if (remembered) {
@@ -46,7 +48,7 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setErrors({});
     setGlobalError('');
@@ -63,9 +65,8 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    // Simulate slight network delay for realism
-    setTimeout(() => {
-      const result = logIn({ email, password, remember });
+    try {
+      const result = await logIn({ email, password, remember });
 
       if (result.success) {
         router.push('/dashboard');
@@ -73,7 +74,10 @@ export default function LoginPage() {
         setGlobalError(result.error);
         setIsLoading(false);
       }
-    }, 600);
+    } catch (err) {
+      setGlobalError('Something went wrong. Please try again.');
+      setIsLoading(false);
+    }
   }
 
   return (

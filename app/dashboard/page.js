@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,6 +20,8 @@ import {
   Home,
   User,
 } from "lucide-react";
+import { getSession, logOut } from "../lib/auth";
+import { getCapsules, getEffectiveStatus } from "../lib/storage";
 import styles from "./dashboard.module.css";
 
 const OCCASION_ICONS = {
@@ -49,45 +51,29 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check auth
-    const auth = localStorage.getItem("memoryvault_auth");
-    if (!auth) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      setUser(JSON.parse(auth));
-    } catch {
-      setUser(null);
-    }
-
-    loadCapsules();
-    setIsLoaded(true);
+    (async () => {
+      const session = await getSession();
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+      setUser(session);
+      await loadCapsules();
+      setIsLoaded(true);
+    })();
 
     // Refresh every minute to update countdowns
     const interval = setInterval(loadCapsules, 60000);
     return () => clearInterval(interval);
   }, [router]);
 
-  function loadCapsules() {
+  async function loadCapsules() {
     try {
-      const data = localStorage.getItem("memoryvault_capsules");
-      const caps = data ? JSON.parse(data) : [];
+      const caps = await getCapsules();
       setCapsules(caps);
     } catch {
       setCapsules([]);
     }
-  }
-
-  function getEffectiveStatus(capsule) {
-    if (capsule.status === "opened") return "opened";
-    const unlockDate = new Date(capsule.unlockDate);
-    const now = new Date();
-    if (unlockDate <= now) return "unlockable";
-    const diff = unlockDate - now;
-    if (diff <= 7 * 24 * 60 * 60 * 1000) return "soon";
-    return "sealed";
   }
 
   function getRelativeTime(dateStr) {
@@ -141,9 +127,9 @@ export default function DashboardPage() {
     return (statusOrder[sa] || 0) - (statusOrder[sb] || 0);
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("memoryvault_auth");
-    router.push("/");
+  const handleLogout = async () => {
+    await logOut();
+    router.push("/login");
   };
 
   if (!isLoaded) return null;
@@ -382,13 +368,10 @@ export default function DashboardPage() {
           <Plus size={20} />
           <span>Create</span>
         </Link>
-        <button
-          className={`${styles.bottomNavItem} ${profileOpen ? styles.bottomNavItemActive : ""}`}
-          onClick={() => setProfileOpen(!profileOpen)}
-        >
+        <Link href="/profile" className={`${styles.bottomNavItem} ${pathname === "/profile" ? styles.bottomNavItemActive : ""}`}>
           <User size={20} />
           <span>Profile</span>
-        </button>
+        </Link>
       </nav>
     </div>
   );

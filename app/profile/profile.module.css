@@ -1,0 +1,718 @@
+/* ── Profile Page Styles ── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #FAF8F5;
+}
+
+/* ── Mobile Top Bar ── */
+.mobileTopBar {
+  display: flex;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  height: 56px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: white;
+  border-bottom: 1px solid #F3F0EB;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobileTopBarLogo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.logoText {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1A1A1A;
+}
+
+.mobileTopBarRight {
+  position: relative;
+}
+
+.mobileTopBarAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 150ms;
+}
+
+.mobileTopBarAvatar:active {
+  transform: scale(0.92);
+}
+
+/* Top bar dropdown */
+.topBarDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #F3F0EB;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  z-index: 300;
+  animation: slideDown 150ms ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.topBarDropdownHeader {
+  padding: 10px 12px;
+}
+
+.topBarDropdownName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+}
+
+.topBarDropdownEmail {
+  font-size: 0.75rem;
+  color: #9E9E9E;
+  margin: 2px 0 0 0;
+}
+
+.topBarDropdownDivider {
+  height: 1px;
+  background: #F3F0EB;
+  margin: 6px 0;
+}
+
+.topBarDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6B6B6B;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms;
+  font-family: inherit;
+}
+
+.topBarDropdownItem:hover {
+  background: #FAF8F5;
+  color: #1A1A1A;
+}
+
+/* ── Bottom Nav ── */
+.bottomNav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: white;
+  border-top: 1px solid #F3F0EB;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.bottomNavItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  padding: 8px 0;
+  color: #9E9E9E;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 150ms;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottomNavItemActive {
+  color: #C9A86A;
+}
+
+/* ── Content ── */
+.content {
+  flex: 1;
+  padding: 24px 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1A1A1A;
+  margin-bottom: 20px;
+}
+
+/* ── Success / Error Banners ── */
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(79, 109, 90, 0.08);
+  border: 1px solid rgba(79, 109, 90, 0.15);
+  border-radius: 12px;
+  color: #3D5645;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  animation: slideDown 200ms ease-out;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(200, 60, 60, 0.06);
+  border: 1px solid rgba(200, 60, 60, 0.12);
+  border-radius: 10px;
+  color: #9E3333;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* ── Cards ── */
+.card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #F3F0EB;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(26, 26, 26, 0.02);
+}
+
+.cardLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9E9E9E;
+  margin-bottom: 16px;
+}
+
+/* ── User Info Card ── */
+.userHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.avatarLarge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.userName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1A1A1A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editBtn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #C9A86A;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 150ms;
+  flex-shrink: 0;
+}
+
+.editBtn:hover {
+  background: rgba(201, 168, 106, 0.08);
+}
+
+.editNameRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.editNameInput {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: 1.5px solid #F3F0EB;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  background: white;
+  color: #1A1A1A;
+  font-family: inherit;
+  transition: border-color 150ms;
+}
+
+.editNameInput:focus {
+  border-color: #C9A86A;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.08);
+}
+
+.saveNameBtn {
+  padding: 8px 16px;
+  background: #C9A86A;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.saveNameBtn:hover {
+  background: #A8894F;
+}
+
+.cancelNameBtn {
+  padding: 8px 12px;
+  color: #6B6B6B;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 150ms;
+}
+
+.cancelNameBtn:hover {
+  background: #FAF8F5;
+}
+
+.userDetail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  margin-bottom: 4px;
+}
+
+/* ── Stats Grid ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: #FAF8F5;
+  border-radius: 12px;
+}
+
+.statIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIconTotal {
+  background: rgba(201, 168, 106, 0.1);
+  color: #C9A86A;
+}
+
+.statIconSealed {
+  background: rgba(201, 168, 106, 0.08);
+  color: #A8894F;
+}
+
+.statIconReady {
+  background: rgba(212, 147, 77, 0.1);
+  color: #D4934D;
+}
+
+.statIconOpened {
+  background: rgba(79, 109, 90, 0.08);
+  color: #4F6D5A;
+}
+
+.statValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.statLabel {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9E9E9E;
+}
+
+.photoStat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #FAF8F5;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+}
+
+/* ── Action Rows ── */
+.actionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: #1A1A1A;
+  transition: opacity 150ms;
+}
+
+.actionRow:hover {
+  opacity: 0.7;
+}
+
+.actionRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+/* ── Password Form ── */
+.passwordForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B6B6B;
+}
+
+.fieldInput {
+  padding: 10px 14px;
+  border: 1.5px solid #F3F0EB;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  background: white;
+  color: #1A1A1A;
+  font-family: inherit;
+  transition: border-color 150ms;
+  width: 100%;
+}
+
+.fieldInput:focus {
+  border-color: #C9A86A;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.08);
+}
+
+.fieldInput::placeholder {
+  color: #9E9E9E;
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .fieldInput {
+  padding-right: 44px;
+}
+
+.pwToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9E9E9E;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.primaryBtn {
+  flex: 1;
+  padding: 12px 20px;
+  background: #C9A86A;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms;
+  font-family: inherit;
+}
+
+.primaryBtn:hover {
+  background: #A8894F;
+}
+
+.secondaryBtn {
+  padding: 12px 20px;
+  border: 1.5px solid #F3F0EB;
+  border-radius: 12px;
+  background: white;
+  color: #6B6B6B;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: inherit;
+}
+
+.secondaryBtn:hover {
+  border-color: #C9A86A;
+  color: #1A1A1A;
+}
+
+/* ── About ── */
+.aboutRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 8px;
+}
+
+.aboutText {
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+}
+
+/* ── Danger Zone ── */
+.dangerCard {
+  border-color: rgba(200, 60, 60, 0.12);
+}
+
+.dangerCard .cardLabel {
+  color: #C83C3C;
+}
+
+.logoutRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #6B6B6B;
+  transition: color 150ms;
+}
+
+.logoutRow:hover {
+  color: #1A1A1A;
+}
+
+.dangerDivider {
+  height: 1px;
+  background: #F3F0EB;
+  margin: 4px 0;
+}
+
+.deleteRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #C83C3C;
+  transition: opacity 150ms;
+}
+
+.deleteRow:hover {
+  opacity: 0.7;
+}
+
+.deleteConfirm {
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.deleteWarning {
+  font-size: 0.8125rem;
+  color: #C83C3C;
+  line-height: 1.6;
+  padding: 12px;
+  background: rgba(200, 60, 60, 0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(200, 60, 60, 0.08);
+}
+
+.deleteActions {
+  display: flex;
+  gap: 10px;
+}
+
+.deleteBtn {
+  flex: 1;
+  padding: 12px 20px;
+  background: #C83C3C;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms;
+  font-family: inherit;
+}
+
+.deleteBtn:hover {
+  background: #A82E2E;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Desktop: hide mobile elements, show sidebar layout ── */
+@media (min-width: 769px) {
+  .content {
+    max-width: 600px;
+    padding: 40px 24px;
+    padding-bottom: 40px;
+  }
+
+  .pageTitle {
+    font-size: 1.75rem;
+  }
+
+  .statsGrid {
+    gap: 14px;
+  }
+
+  .statItem {
+    padding: 18px 12px;
+  }
+}

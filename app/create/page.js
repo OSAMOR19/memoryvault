@@ -126,22 +126,28 @@ export default function CreateCapsulePage() {
     }
   };
 
-  const handleSeal = () => {
+  const handleSeal = async () => {
     if (!validate()) return;
     setSealing(true);
 
-    const capsule = addCapsule({
-      title: title.trim(),
-      occasion,
-      message: message.trim(),
-      photos,
-      gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0 },
-      unlockDate: new Date(unlockDate).toISOString(),
-    });
+    try {
+      const capsule = await addCapsule({
+        title: title.trim(),
+        occasion,
+        message: message.trim(),
+        photos,
+        gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0 },
+        unlockDate: new Date(unlockDate).toISOString(),
+      });
 
-    setTimeout(() => {
-      router.push(`/capsule/${capsule.id}`);
-    }, 2200);
+      setTimeout(() => {
+        router.push(`/capsule/${capsule.id}`);
+      }, 2200);
+    } catch (err) {
+      console.error('[MemoryVault] Seal error:', err);
+      setSealing(false);
+      setError('Failed to create capsule. Please try again.');
+    }
   };
 
   const handlePhotoUpload = (e) => {

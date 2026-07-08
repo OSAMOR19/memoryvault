@@ -22,6 +22,7 @@ import {
   getCapsule,
   updateCapsule,
   getEffectiveStatus,
+  getPhotoUrl,
 } from '../../lib/storage';
 import { formatLong, formatMedium, getCountdown } from '../../lib/dates';
 import styles from './capsule.module.css';
@@ -108,12 +109,14 @@ export default function CapsuleDetailPage({ params }) {
 
   // Load capsule
   useEffect(() => {
-    const c = getCapsule(capsuleId);
-    if (c) {
-      setCapsule(c);
-      setStatus(getEffectiveStatus(c));
-    }
-    setLoading(false);
+    (async () => {
+      const c = await getCapsule(capsuleId);
+      if (c) {
+        setCapsule(c);
+        setStatus(getEffectiveStatus(c));
+      }
+      setLoading(false);
+    })();
   }, [capsuleId]);
 
   // Live countdown timer
@@ -135,10 +138,10 @@ export default function CapsuleDetailPage({ params }) {
     return () => clearInterval(interval);
   }, [capsule, status]);
 
-  const handleOpen = useCallback(() => {
+  const handleOpen = useCallback(async () => {
     setOpening(true);
-    setTimeout(() => {
-      const updated = updateCapsule(capsuleId, {
+    setTimeout(async () => {
+      const updated = await updateCapsule(capsuleId, {
         status: 'opened',
         openedAt: new Date().toISOString(),
       });
@@ -369,7 +372,7 @@ export default function CapsuleDetailPage({ params }) {
                         capsule.photos.length === 1 ? styles.photoSingle : ''
                       }`}
                     >
-                      <img src={src} alt={`Memory ${i + 1}`} />
+                      <img src={getPhotoUrl(src)} alt={`Memory ${i + 1}`} />
                     </div>
                   ))}
                 </div>

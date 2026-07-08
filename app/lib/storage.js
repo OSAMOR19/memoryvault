@@ -1,109 +1,177 @@
 /**
- * MemoryVault — LocalStorage capsule CRUD utilities
+ * MemoryVault — Capsule Storage (Supabase)
  *
- * Capsule shape:
- * {
- *   id: string,
- *   title: string,
- *   occasion: string,
- *   message: string,
- *   photos: string[],       // base64 data URIs
- *   gift: { enabled: boolean, amount: number },
- *   unlockDate: string,     // ISO date string
- *   createdAt: string,      // ISO date string
- *   openedAt: string|null,  // ISO date string or null
- *   status: string,         // 'sealed' | 'opened'
- * }
+ * All capsule CRUD powered by Supabase Postgres + Storage.
  */
 
-const STORAGE_KEY = 'memoryvault_capsules';
+import { supabase } from './supabase';
+
+// ── Capsule CRUD ──────────────────────────────────────────
 
 /**
- * Generate a unique capsule ID (URL-safe, 12-char hex).
+ * Get all capsules for the current user.
  */
-export function generateId() {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `${timestamp}-${random}`;
-}
+export async function getCapsules() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
 
-/**
- * Read all capsules from localStorage.
- */
-export function getCapsules() {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
+  const { data, error } = await supabase
+    .from('capsules')
+    .select('*, capsule_photos(id, storage_path, display_order)')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[MemoryVault] getCapsules error:', error.message);
     return [];
   }
+
+  // Transform to app format
+  return (data || []).map(transformCapsule);
 }
 
 /**
  * Get a single capsule by ID.
  */
-export function getCapsule(id) {
-  const capsules = getCapsules();
-  return capsules.find((c) => c.id === id) || null;
+export async function getCapsule(id) {
+  const { data, error } = await supabase
+    .from('capsules')
+    .select('*, capsule_photos(id, storage_path, display_order)')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return transformCapsule(data);
 }
 
 /**
- * Save a new capsule. Returns the saved capsule object.
+ * Create a new capsule.
  */
-export function addCapsule(data) {
-  const capsules = getCapsules();
-  const capsule = {
-    id: generateId(),
-    title: data.title || 'Untitled Capsule',
-    occasion: data.occasion || 'custom',
-    message: data.message || '',
-    photos: data.photos || [],
-    gift: data.gift || { enabled: false, amount: 0 },
-    unlockDate: data.unlockDate || null,
-    createdAt: new Date().toISOString(),
-    openedAt: null,
-    status: 'sealed',
-  };
-  capsules.push(capsule);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(capsules));
-  return capsule;
+export async function addCapsule(capsuleData) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  // Insert capsule row
+  const { data: capsule, error } = await supabase
+    .from('capsules')
+    .insert({
+      user_id: session.user.id,
+      title: capsuleData.title || 'Untitled Capsule',
+      occasion: capsuleData.occasion || 'custom',
+      message: capsuleData.message || '',
+      gift_enabled: capsuleData.gift?.enabled || false,
+      gift_amount: capsuleData.gift?.amount || 0,
+      unlock_date: capsuleData.unlockDate,
+      status: 'sealed',
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  // Upload photos if any
+  if (capsuleData.photos && capsuleData.photos.length > 0) {
+    await uploadPhotos(capsule.id, session.user.id, capsuleData.photos);
+  }
+
+  // Return in app format
+  return transformCapsule({
+    ...capsule,
+    capsule_photos: [],
+  });
 }
 
 /**
- * Update a capsule by ID with partial updates.
+ * Update a capsule by ID.
  */
-export function updateCapsule(id, updates) {
-  const capsules = getCapsules();
-  const index = capsules.findIndex((c) => c.id === id);
-  if (index === -1) return null;
-  capsules[index] = { ...capsules[index], ...updates };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(capsules));
-  return capsules[index];
+export async function updateCapsule(id, updates) {
+  const dbUpdates = {};
+  if (updates.status !== undefined) dbUpdates.status = updates.status;
+  if (updates.openedAt !== undefined) dbUpdates.opened_at = updates.openedAt;
+  if (updates.title !== undefined) dbUpdates.title = updates.title;
+  if (updates.message !== undefined) dbUpdates.message = updates.message;
+
+  const { data, error } = await supabase
+    .from('capsules')
+    .update(dbUpdates)
+    .eq('id', id)
+    .select('*, capsule_photos(id, storage_path, display_order)')
+    .single();
+
+  if (error || !data) return null;
+  return transformCapsule(data);
 }
 
 /**
  * Delete a capsule by ID.
  */
-export function deleteCapsule(id) {
-  const capsules = getCapsules();
-  const filtered = capsules.filter((c) => c.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-  return filtered;
+export async function deleteCapsule(id) {
+  // Photos will cascade delete from the table,
+  // but we also need to clean up storage
+  const { data: photos } = await supabase
+    .from('capsule_photos')
+    .select('storage_path')
+    .eq('capsule_id', id);
+
+  if (photos && photos.length > 0) {
+    const paths = photos.map(p => p.storage_path);
+    await supabase.storage.from('capsule-photos').remove(paths);
+  }
+
+  await supabase.from('capsules').delete().eq('id', id);
+}
+
+// ── Photo Uploads ─────────────────────────────────────────
+
+async function uploadPhotos(capsuleId, userId, photoDataUrls) {
+  for (let i = 0; i < photoDataUrls.length; i++) {
+    const dataUrl = photoDataUrls[i];
+    try {
+      // Convert data URL to blob
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const ext = blob.type.split('/')[1] || 'jpg';
+      const path = `${userId}/${capsuleId}/${Date.now()}_${i}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('capsule-photos')
+        .upload(path, blob, { contentType: blob.type });
+
+      if (uploadError) {
+        console.error('[MemoryVault] Photo upload error:', uploadError.message);
+        continue;
+      }
+
+      // Insert photo record
+      await supabase.from('capsule_photos').insert({
+        capsule_id: capsuleId,
+        storage_path: path,
+        display_order: i,
+      });
+    } catch (err) {
+      console.error('[MemoryVault] Photo processing error:', err);
+    }
+  }
 }
 
 /**
- * Check if a capsule's unlock date has passed.
+ * Get a public/signed URL for a stored photo.
  */
+export function getPhotoUrl(storagePath) {
+  const { data } = supabase.storage
+    .from('capsule-photos')
+    .getPublicUrl(storagePath);
+  return data?.publicUrl || '';
+}
+
+// ── Status helpers ────────────────────────────────────────
+
 export function isUnlockable(capsule) {
   if (!capsule || !capsule.unlockDate) return false;
   if (capsule.status === 'opened' || capsule.openedAt) return false;
   return new Date(capsule.unlockDate) <= new Date();
 }
 
-/**
- * Check if a capsule is within 7 days of unlocking.
- */
 export function isUnlockingSoon(capsule) {
   if (!capsule || !capsule.unlockDate) return false;
   if (capsule.status === 'opened' || capsule.openedAt) return false;
@@ -114,14 +182,29 @@ export function isUnlockingSoon(capsule) {
   return unlockDate.getTime() - now.getTime() <= sevenDays;
 }
 
-/**
- * Derive the effective visual status of a capsule.
- * Returns: 'opened' | 'unlockable' | 'soon' | 'sealed'
- */
 export function getEffectiveStatus(capsule) {
   if (!capsule) return 'sealed';
   if (capsule.status === 'opened' || capsule.openedAt) return 'opened';
   if (isUnlockable(capsule)) return 'unlockable';
   if (isUnlockingSoon(capsule)) return 'soon';
   return 'sealed';
+}
+
+// ── Transform DB row → app shape ──────────────────────────
+
+function transformCapsule(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    occasion: row.occasion,
+    message: row.message,
+    photos: (row.capsule_photos || [])
+      .sort((a, b) => a.display_order - b.display_order)
+      .map(p => p.storage_path),
+    gift: { enabled: row.gift_enabled, amount: row.gift_amount },
+    unlockDate: row.unlock_date,
+    createdAt: row.created_at,
+    openedAt: row.opened_at,
+    status: row.status,
+  };
 }

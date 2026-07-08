@@ -55,12 +55,14 @@ export default function SignupPage() {
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      router.push('/dashboard');
-    }
+    (async () => {
+      if (await isAuthenticated()) {
+        router.push('/dashboard');
+      }
+    })();
   }, [router]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setErrors({});
     setGlobalError('');
@@ -82,21 +84,19 @@ export default function SignupPage() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      try {
-        const result = signUp({ name, email, password });
+    try {
+      const result = await signUp({ name, email, password });
 
-        if (result.success) {
-          router.push('/dashboard');
-        } else {
-          setGlobalError(result.error);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        setGlobalError(err.message || 'Something went wrong. Please clear your browser storage and try again.');
+      if (result.success) {
+        router.push('/dashboard');
+      } else {
+        setGlobalError(result.error);
         setIsLoading(false);
       }
-    }, 700);
+    } catch (err) {
+      setGlobalError(err.message || 'Something went wrong. Please try again.');
+      setIsLoading(false);
+    }
   }
 
   const strengthClasses = ['', styles.strengthSegmentActive1, styles.strengthSegmentActive2, styles.strengthSegmentActive3, styles.strengthSegmentActive4];
