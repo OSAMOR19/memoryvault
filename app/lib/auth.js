@@ -89,6 +89,25 @@ export async function signUp({ name, email, password }) {
   };
 }
 
+// ── Google OAuth ──────────────────────────────────────────
+
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/dashboard`,
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  // The browser will redirect to Google, so this line
+  // is only reached if something went wrong.
+  return { success: true };
+}
+
 // ── Log In ────────────────────────────────────────────────
 
 export async function logIn({ email, password, remember = false }) {
