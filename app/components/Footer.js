@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Lock } from "lucide-react";
+
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -9,7 +9,7 @@ export default function Footer() {
         <div className={styles.top}>
           <div className={styles.brand}>
             <div className={styles.logoIcon}>
-              <Lock size={14} strokeWidth={2.5} />
+              <img src="/logo.png" alt="MemoryVault" width={20} height={20} style={{ display: 'block' }} />
             </div>
             <span className={styles.logoText}>MemoryVault</span>
           </div>

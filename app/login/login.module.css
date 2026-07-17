@@ -31,7 +31,7 @@
   display: flex;
   min-height: 100vh;
   background-color: #FAF8F5;
-  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
 }
 
 /* ── Left Branding Panel ── */
@@ -64,13 +64,12 @@
 .brandLogoIcon {
   width: 44px;
   height: 44px;
-  background: #C9A86A;
+  background: transparent;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.3);
+  overflow: hidden;
 }
 
 .brandName {
@@ -108,11 +107,11 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(201, 168, 106, 0.12);
+  background: rgba(233, 177, 20, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #C9A86A;
+  color: #E9B114;
   flex-shrink: 0;
 }
 
@@ -136,7 +135,7 @@
 
 .decorIcon {
   position: absolute;
-  color: rgba(201, 168, 106, 0.08);
+  color: rgba(233, 177, 20, 0.08);
   animation: floatIcon 6s ease-in-out infinite;
 }
 
@@ -191,13 +190,12 @@
 .mobileLogoIcon {
   width: 36px;
   height: 36px;
-  background: #C9A86A;
+  background: transparent;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(201, 168, 106, 0.25);
+  overflow: hidden;
 }
 
 .mobileLogoText {
@@ -356,13 +354,13 @@
 
 .input:focus {
   background: #FFFFFF;
-  border-color: #C9A86A;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.12);
+  border-color: #E9B114;
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.12);
 }
 
 .input:focus ~ .inputIcon,
 .inputWrapper:focus-within .inputIcon {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 .inputError {
@@ -433,8 +431,8 @@
 }
 
 .checkbox:checked {
-  background: #C9A86A;
-  border-color: #C9A86A;
+  background: #E9B114;
+  border-color: #E9B114;
 }
 
 .checkbox:checked::after {
@@ -451,21 +449,21 @@
 
 .forgotLink {
   font-size: 14px;
-  color: #C9A86A;
+  color: #E9B114;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .forgotLink:hover {
-  color: #A8894F;
+  color: #C49710;
 }
 
 /* ── Submit Button ── */
 .submitButton {
   width: 100%;
   padding: 15px 24px;
-  background: #C9A86A;
+  background: #E9B114;
   color: #FFFFFF;
   border: none;
   border-radius: 9999px;
@@ -476,12 +474,12 @@
   font-family: inherit;
   letter-spacing: 0.3px;
   margin-top: 4px;
-  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.3);
+  box-shadow: 0 4px 16px rgba(233, 177, 20, 0.3);
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #A8894F;
-  box-shadow: 0 6px 20px rgba(168, 137, 79, 0.35);
+  background: #C49710;
+  box-shadow: 0 6px 20px rgba(196, 151, 16, 0.35);
   transform: translateY(-1px);
 }
 
@@ -531,14 +529,14 @@
 }
 
 .footerLink {
-  color: #C9A86A;
+  color: #E9B114;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .footerLink:hover {
-  color: #A8894F;
+  color: #C49710;
 }
 
 /* ── Responsive ── */

@@ -34,11 +34,11 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  overflow: hidden;
 }
 
 .logoText {
@@ -74,8 +74,8 @@
 }
 
 .sidebarLinkActive {
-  background: rgba(201, 168, 106, 0.08);
-  color: #A8894F;
+  background: rgba(233, 177, 20, 0.08);
+  color: #C49710;
   font-weight: 600;
 }
 
@@ -139,19 +139,19 @@
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.875rem;
   text-decoration: none;
   transition: all 200ms;
-  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.2);
+  box-shadow: 0 2px 8px rgba(233, 177, 20, 0.2);
 }
 
 .createBtn:hover {
-  background: #A8894F;
-  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.3);
+  background: #C49710;
+  box-shadow: 0 4px 16px rgba(233, 177, 20, 0.3);
 }
 
 /* Toolbar */
@@ -220,8 +220,8 @@
 }
 
 .searchInput:focus {
-  border-color: #C9A86A;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.08);
+  border-color: #E9B114;
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.08);
   outline: none;
 }
 
@@ -255,7 +255,7 @@
   transform: translateY(-1px);
 }
 
-.card_sealed { border-left-color: #C9A86A; }
+.card_sealed { border-left-color: #E9B114; }
 .card_opened { border-left-color: #4F6D5A; }
 .card_soon { border-left-color: #D4934D; }
 .card_unlockable { border-left-color: #D4934D; animation: pulseGlow 3s ease-in-out infinite; }
@@ -270,7 +270,7 @@
   flex-shrink: 0;
 }
 
-.cardIcon_sealed { background: rgba(201, 168, 106, 0.08); color: #C9A86A; }
+.cardIcon_sealed { background: rgba(233, 177, 20, 0.08); color: #E9B114; }
 .cardIcon_opened { background: rgba(79, 109, 90, 0.08); color: #4F6D5A; }
 .cardIcon_soon { background: rgba(212, 147, 77, 0.08); color: #D4934D; }
 .cardIcon_unlockable { background: rgba(212, 147, 77, 0.1); color: #D4934D; }
@@ -328,7 +328,7 @@
   background: currentColor;
 }
 
-.badge_sealed { background: rgba(201, 168, 106, 0.08); color: #A8894F; }
+.badge_sealed { background: rgba(233, 177, 20, 0.08); color: #C49710; }
 .badge_opened { background: rgba(79, 109, 90, 0.08); color: #3D5645; }
 .badge_soon { background: rgba(212, 147, 77, 0.08); color: #C77A20; }
 .badge_unlockable { background: rgba(212, 147, 77, 0.1); color: #C77A20; }
@@ -349,11 +349,11 @@
   width: 80px;
   height: 80px;
   border-radius: 24px;
-  background: rgba(201, 168, 106, 0.06);
+  background: rgba(233, 177, 20, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #C9A86A;
+  color: #E9B114;
   margin-bottom: 24px;
 }
 
@@ -377,7 +377,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 9999px;
   font-weight: 600;
@@ -387,7 +387,7 @@
 }
 
 .emptyCta:hover {
-  background: #A8894F;
+  background: #C49710;
 }
 
 /* Header Actions */
@@ -416,7 +416,7 @@
 }
 
 .profileBadge:hover {
-  border-color: #C9A86A;
+  border-color: #E9B114;
   background: #FAF8F5;
 }
 
@@ -424,7 +424,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: white;
   font-weight: 700;
   font-size: 0.875rem;
@@ -581,7 +581,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: white;
   font-weight: 700;
   font-size: 0.875rem;
@@ -649,11 +649,11 @@
 }
 
 .bottomNavItem:active {
-  color: #A8894F;
+  color: #C49710;
 }
 
 .bottomNavItemActive {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 /* ── Responsive: Mobile (≤768px) ── */

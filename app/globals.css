@@ -21,7 +21,7 @@ html {
 }
 
 body {
-  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-geist), -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 400;
   font-size: 1rem;
   line-height: 1.6;
@@ -65,7 +65,7 @@ ul, ol {
 }
 
 ::selection {
-  background: #E8D5B0;
+  background: rgba(233, 177, 20, 0.3);
   color: #1A1A1A;
 }
 
@@ -83,7 +83,7 @@ ul, ol {
 
 /* ── Focus ──────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #C9A86A;
+  outline: 2px solid #E9B114;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -149,8 +149,8 @@ ul, ol {
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 106, 0.3); }
-  50%      { box-shadow: 0 0 20px 4px rgba(201, 168, 106, 0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233, 177, 20, 0.3); }
+  50%      { box-shadow: 0 0 20px 4px rgba(233, 177, 20, 0.15); }
 }
 
 @keyframes shimmer {

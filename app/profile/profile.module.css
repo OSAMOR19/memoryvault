@@ -35,11 +35,11 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  overflow: hidden;
 }
 
 .logoText {
@@ -57,7 +57,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: white;
   font-weight: 700;
   font-size: 0.875rem;
@@ -177,7 +177,7 @@
 }
 
 .bottomNavItemActive {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 /* ── Content ── */
@@ -258,7 +258,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: white;
   font-weight: 700;
   font-size: 1.25rem;
@@ -292,7 +292,7 @@
 .editBtn {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #C9A86A;
+  color: #E9B114;
   cursor: pointer;
   border: none;
   background: none;
@@ -303,7 +303,7 @@
 }
 
 .editBtn:hover {
-  background: rgba(201, 168, 106, 0.08);
+  background: rgba(233, 177, 20, 0.08);
 }
 
 .editNameRow {
@@ -328,14 +328,14 @@
 }
 
 .editNameInput:focus {
-  border-color: #C9A86A;
+  border-color: #E9B114;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.08);
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.08);
 }
 
 .saveNameBtn {
   padding: 8px 16px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 10px;
   font-size: 0.8125rem;
@@ -346,7 +346,7 @@
 }
 
 .saveNameBtn:hover {
-  background: #A8894F;
+  background: #C49710;
 }
 
 .cancelNameBtn {
@@ -402,13 +402,13 @@
 }
 
 .statIconTotal {
-  background: rgba(201, 168, 106, 0.1);
-  color: #C9A86A;
+  background: rgba(233, 177, 20, 0.1);
+  color: #E9B114;
 }
 
 .statIconSealed {
-  background: rgba(201, 168, 106, 0.08);
-  color: #A8894F;
+  background: rgba(233, 177, 20, 0.08);
+  color: #C49710;
 }
 
 .statIconReady {
@@ -505,9 +505,9 @@
 }
 
 .fieldInput:focus {
-  border-color: #C9A86A;
+  border-color: #E9B114;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.08);
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.08);
 }
 
 .fieldInput::placeholder {
@@ -546,7 +546,7 @@
 .primaryBtn {
   flex: 1;
   padding: 12px 20px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 12px;
   font-size: 0.875rem;
@@ -558,7 +558,7 @@
 }
 
 .primaryBtn:hover {
-  background: #A8894F;
+  background: #C49710;
 }
 
 .secondaryBtn {
@@ -575,7 +575,7 @@
 }
 
 .secondaryBtn:hover {
-  border-color: #C9A86A;
+  border-color: #E9B114;
   color: #1A1A1A;
 }
 

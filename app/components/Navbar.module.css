@@ -13,7 +13,7 @@
   background: rgba(250, 248, 245, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(201, 168, 106, 0.08);
+  border-bottom: 1px solid rgba(233, 177, 20, 0.08);
   padding: 12px 0;
 }
 
@@ -38,12 +38,11 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.25);
+  overflow: hidden;
 }
 
 .logoText {
@@ -86,7 +85,7 @@
 }
 
 .btnSecondary:hover {
-  border-color: #E8D5B0;
+  border-color: #F5D97A;
   box-shadow: 0 2px 8px rgba(26, 26, 26, 0.04);
 }
 
@@ -96,17 +95,17 @@
   color: white;
   padding: 8px 24px;
   border-radius: 9999px;
-  background: #C9A86A;
+  background: #E9B114;
   transition: all 150ms;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.25);
+  box-shadow: 0 2px 8px rgba(233, 177, 20, 0.25);
 }
 
 .btnPrimary:hover {
-  background: #A8894F;
-  box-shadow: 0 4px 12px rgba(201, 168, 106, 0.35);
+  background: #C49710;
+  box-shadow: 0 4px 12px rgba(233, 177, 20, 0.35);
 }
 
 .menuToggle {
@@ -146,7 +145,7 @@
 }
 
 .mobileLink:hover {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 .mobileDivider {
@@ -160,7 +159,7 @@
   align-items: center;
   justify-content: center;
   padding: 14px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 12px;
   font-weight: 600;

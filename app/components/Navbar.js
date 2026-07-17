@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Lock, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
@@ -37,7 +37,7 @@ export default function Navbar() {
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon}>
-            <Lock size={16} strokeWidth={2.5} />
+            <img src="/logo.png" alt="MemoryVault" width={24} height={24} style={{ display: 'block' }} />
           </div>
           <span className={styles.logoText}>MemoryVault</span>
         </Link>

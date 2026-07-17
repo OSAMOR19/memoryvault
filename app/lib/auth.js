@@ -191,6 +191,25 @@ export async function changePassword(newPassword) {
   return { success: true };
 }
 
+// ── Password Reset Request ────────────────────────────────
+
+export async function requestPasswordReset(email) {
+  const emailError = validateEmail(email);
+  if (emailError) return { success: false, error: emailError };
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.toLowerCase().trim(),
+    {
+      redirectTo: `${window.location.origin}/reset-password`,
+    }
+  );
+
+  if (error) return { success: false, error: error.message };
+
+  // Always return success even if email doesn't exist (security best practice)
+  return { success: true };
+}
+
 // ── Delete account ────────────────────────────────────────
 // Note: Full account deletion requires a server-side function with
 // service_role key. For now we sign out and delete profile data.

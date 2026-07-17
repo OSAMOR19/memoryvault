@@ -7,7 +7,7 @@
 .page {
   min-height: 100vh;
   background: #FAF8F5;
-  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -18,7 +18,7 @@
   top: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(90deg, #C9A86A, #A8894F);
+  background: linear-gradient(90deg, #E9B114, #C49710);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
 }
@@ -59,8 +59,8 @@
 }
 
 .backButton:hover {
-  border-color: #C9A86A;
-  color: #C9A86A;
+  border-color: #E9B114;
+  color: #E9B114;
 }
 
 .stepIndicator {
@@ -71,7 +71,7 @@
 }
 
 .stepIndicator span {
-  color: #C9A86A;
+  color: #E9B114;
   font-weight: 600;
 }
 
@@ -105,18 +105,18 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #E8D5B0;
+  background: #F5D97A;
   transition: all 0.3s ease;
 }
 
 .dotActive {
   width: 24px;
   border-radius: 4px;
-  background: #C9A86A;
+  background: #E9B114;
 }
 
 .dotCompleted {
-  background: #C9A86A;
+  background: #E9B114;
 }
 
 /* ── Content Area ── */
@@ -164,8 +164,8 @@
 }
 
 .titleInput:focus {
-  border-color: #C9A86A;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.1);
+  border-color: #E9B114;
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.1);
 }
 
 .sectionLabel {
@@ -196,15 +196,15 @@
 }
 
 .occasionCard:hover {
-  border-color: rgba(201, 168, 106, 0.3);
+  border-color: rgba(233, 177, 20, 0.3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .occasionCardActive {
-  border-color: #C9A86A;
-  background: linear-gradient(135deg, rgba(201, 168, 106, 0.06), rgba(232, 213, 176, 0.08));
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.1);
+  border-color: #E9B114;
+  background: linear-gradient(135deg, rgba(233, 177, 20, 0.06), rgba(245, 217, 122, 0.08));
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.1);
 }
 
 .occasionIcon {
@@ -221,7 +221,7 @@
 }
 
 .occasionCardActive .occasionIcon {
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: #FFFFFF;
 }
 
@@ -256,8 +256,8 @@
   background-image: repeating-linear-gradient(
     transparent,
     transparent 31px,
-    rgba(201, 168, 106, 0.12) 31px,
-    rgba(201, 168, 106, 0.12) 32px
+    rgba(233, 177, 20, 0.12) 31px,
+    rgba(233, 177, 20, 0.12) 32px
   );
   background-position-y: 27px;
   position: relative;
@@ -285,8 +285,8 @@
   background-image: repeating-linear-gradient(
     transparent,
     transparent 31px,
-    rgba(201, 168, 106, 0.12) 31px,
-    rgba(201, 168, 106, 0.12) 32px
+    rgba(233, 177, 20, 0.12) 31px,
+    rgba(233, 177, 20, 0.12) 32px
   );
   background-position-y: 27px;
 }
@@ -316,7 +316,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 32px;
-  border: 2px dashed rgba(201, 168, 106, 0.25);
+  border: 2px dashed rgba(233, 177, 20, 0.25);
   border-radius: 14px;
   background: rgba(247, 244, 239, 0.5);
   cursor: pointer;
@@ -325,9 +325,9 @@
 }
 
 .photoUploadArea:hover {
-  border-color: #C9A86A;
-  background: rgba(201, 168, 106, 0.04);
-  color: #C9A86A;
+  border-color: #E9B114;
+  background: rgba(233, 177, 20, 0.04);
+  color: #E9B114;
 }
 
 .photoUploadText {
@@ -405,7 +405,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -439,7 +439,7 @@
 }
 
 .toggleActive {
-  background: #C9A86A;
+  background: #E9B114;
 }
 
 .toggleKnob {
@@ -483,7 +483,7 @@
 .giftAmountUnit {
   font-size: 18px;
   font-weight: 500;
-  color: #C9A86A;
+  color: #E9B114;
   margin-left: 4px;
 }
 
@@ -492,7 +492,7 @@
   height: 6px;
   -webkit-appearance: none;
   appearance: none;
-  background: linear-gradient(90deg, #E8D5B0, #C9A86A);
+  background: linear-gradient(90deg, #F5D97A, #E9B114);
   border-radius: 3px;
   outline: none;
   margin-bottom: 12px;
@@ -504,8 +504,8 @@
   height: 24px;
   border-radius: 50%;
   background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(201, 168, 106, 0.4);
-  border: 3px solid #C9A86A;
+  box-shadow: 0 2px 8px rgba(233, 177, 20, 0.4);
+  border: 3px solid #E9B114;
   cursor: pointer;
 }
 
@@ -520,7 +520,7 @@
   background: linear-gradient(135deg, #F7F4EF, #FFFFFF);
   border-radius: 14px;
   padding: 24px;
-  border: 1.5px solid rgba(201, 168, 106, 0.15);
+  border: 1.5px solid rgba(233, 177, 20, 0.15);
   text-align: center;
 }
 
@@ -536,7 +536,7 @@
 .giftPreviewAmount {
   font-size: 32px;
   font-weight: 700;
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 .giftPreviewNote {
@@ -567,12 +567,12 @@
 }
 
 .chip:hover {
-  border-color: #C9A86A;
-  color: #C9A86A;
+  border-color: #E9B114;
+  color: #E9B114;
 }
 
 .chipActive {
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: #FFFFFF;
   border-color: transparent;
 }
@@ -608,8 +608,8 @@
 }
 
 .dateInput:focus {
-  border-color: #C9A86A;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.1);
+  border-color: #E9B114;
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.1);
 }
 
 /* Timeline Bar */
@@ -632,7 +632,7 @@
 .timelineBar {
   flex: 1;
   height: 4px;
-  background: #E8D5B0;
+  background: #F5D97A;
   border-radius: 2px;
   position: relative;
   overflow: hidden;
@@ -643,7 +643,7 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #4F6D5A, #C9A86A);
+  background: linear-gradient(90deg, #4F6D5A, #E9B114);
   border-radius: 2px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -655,8 +655,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #C9A86A;
-  box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.2);
+  background: #E9B114;
+  box-shadow: 0 0 0 3px rgba(233, 177, 20, 0.2);
 }
 
 /* Sleep Preview Card */
@@ -677,14 +677,14 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #4F6D5A, #C9A86A);
+  background: linear-gradient(90deg, #4F6D5A, #E9B114);
 }
 
 .sleepIcon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(79, 109, 90, 0.08), rgba(201, 168, 106, 0.08));
+  background: linear-gradient(135deg, rgba(79, 109, 90, 0.08), rgba(233, 177, 20, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,7 +700,7 @@
 }
 
 .sleepDate {
-  color: #C9A86A;
+  color: #E9B114;
   font-weight: 700;
 }
 
@@ -790,7 +790,7 @@
   padding: 16px 24px;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   color: #FFFFFF;
   font-size: 16px;
   font-weight: 700;
@@ -806,7 +806,7 @@
 
 .sealButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201, 168, 106, 0.35);
+  box-shadow: 0 8px 24px rgba(233, 177, 20, 0.35);
 }
 
 .sealButton:disabled {
@@ -833,13 +833,13 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #C9A86A, #A8894F, #8B7340);
+  background: linear-gradient(145deg, #E9B114, #C49710, #A07D0E);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #FFFFFF;
   box-shadow:
-    0 4px 20px rgba(201, 168, 106, 0.4),
+    0 4px 20px rgba(233, 177, 20, 0.4),
     inset 0 2px 4px rgba(255, 255, 255, 0.2),
     inset 0 -2px 4px rgba(0, 0, 0, 0.1);
   animation: sealStamp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;

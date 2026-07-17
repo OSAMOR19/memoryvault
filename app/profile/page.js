@@ -151,7 +151,7 @@ export default function ProfilePage() {
       <header className={styles.mobileTopBar}>
         <Link href="/dashboard" className={styles.mobileTopBarLogo}>
           <div className={styles.logoIcon}>
-            <Lock size={14} strokeWidth={2.5} />
+            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
           </div>
           <span className={styles.logoText}>MemoryVault</span>
         </Link>

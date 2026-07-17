@@ -1,11 +1,10 @@
-import { Montserrat } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import StorageCleaner from "./components/StorageCleaner";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -29,7 +28,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={montserrat.variable}>
+    <html lang="en" className={geist.variable}>
       <body>
         <StorageCleaner />
         {children}
@@ -37,4 +36,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-

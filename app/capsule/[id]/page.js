@@ -60,7 +60,7 @@ const QUOTES = [
 ];
 
 function Confetti() {
-  const colors = ['#C9A86A', '#E8D5B0', '#4F6D5A', '#A3BFA8', '#A8894F', '#F7F4EF'];
+  const colors = ['#E9B114', '#F5D97A', '#4F6D5A', '#A3BFA8', '#C49710', '#F7F4EF'];
   const pieces = Array.from({ length: 40 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,

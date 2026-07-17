@@ -25,11 +25,11 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  overflow: hidden;
 }
 
 .logoText {
@@ -76,7 +76,7 @@
 }
 
 .link:hover {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 @media (max-width: 600px) {

@@ -21,7 +21,7 @@
 .particle {
   position: absolute;
   border-radius: 50%;
-  background: #E8D5B0;
+  background: #F5D97A;
   opacity: 0;
   animation: float 6s ease-in-out infinite, fadeIn 2s ease-out forwards;
 }
@@ -38,14 +38,14 @@
   align-items: center;
   gap: 8px;
   padding: 6px 16px;
-  background: rgba(201, 168, 106, 0.08);
-  border: 1px solid rgba(201, 168, 106, 0.15);
+  background: rgba(233, 177, 20, 0.08);
+  border: 1px solid rgba(233, 177, 20, 0.15);
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #A8894F;
+  color: #C49710;
   margin-bottom: 32px;
   animation: fadeInUp 600ms ease-out both;
 }
@@ -62,7 +62,7 @@
 
 .headingEm {
   font-style: italic;
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 .subheading {
@@ -87,19 +87,19 @@
   align-items: center;
   gap: 10px;
   padding: 14px 32px;
-  background: #C9A86A;
+  background: #E9B114;
   color: white;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.9375rem;
   text-decoration: none;
   transition: all 200ms;
-  box-shadow: 0 4px 16px rgba(201, 168, 106, 0.25);
+  box-shadow: 0 4px 16px rgba(233, 177, 20, 0.25);
 }
 
 .btnPrimary:hover {
-  background: #A8894F;
-  box-shadow: 0 6px 24px rgba(201, 168, 106, 0.35);
+  background: #C49710;
+  box-shadow: 0 6px 24px rgba(233, 177, 20, 0.35);
   transform: translateY(-1px);
 }
 
@@ -118,7 +118,7 @@
 }
 
 .btnSecondary:hover {
-  border-color: #E8D5B0;
+  border-color: #F5D97A;
   box-shadow: 0 2px 12px rgba(26, 26, 26, 0.04);
 }
 
@@ -138,7 +138,7 @@
 }
 
 .statIcon {
-  color: #C9A86A;
+  color: #E9B114;
 }
 
 /* Capsule illustration */
@@ -162,7 +162,7 @@
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(201, 168, 106, 0.08), rgba(201, 168, 106, 0.02));
+  background: linear-gradient(135deg, rgba(233, 177, 20, 0.08), rgba(233, 177, 20, 0.02));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,12 +174,12 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #C9A86A, #A8894F);
+  background: linear-gradient(135deg, #E9B114, #C49710);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 8px 32px rgba(201, 168, 106, 0.3), inset 0 2px 4px rgba(255,255,255,0.2);
+  box-shadow: 0 8px 32px rgba(233, 177, 20, 0.3), inset 0 2px 4px rgba(255,255,255,0.2);
   animation: float 6s ease-in-out infinite;
 }
 
@@ -188,7 +188,7 @@
 .capsuleRing3 {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(201, 168, 106, 0.1);
+  border: 1px solid rgba(233, 177, 20, 0.1);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
