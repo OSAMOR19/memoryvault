@@ -58,7 +58,7 @@ export default function LoginPage() {
     try {
       const identity = await getNimiqAuthIdentity();
       if (!identity) {
-        setGlobalError('Unable to connect to Nimiq Wallet. Please try logging in with email.');
+        setGlobalError('Open this app inside Nimiq Pay to connect your wallet.');
         setIsLoading(false);
         return;
       }
@@ -66,11 +66,11 @@ export default function LoginPage() {
       if (result.success) {
         router.push('/dashboard');
       } else {
-        setGlobalError(result.error || 'Failed to sign in with Nimiq Wallet.');
+        setGlobalError(result.error || 'Open this app inside Nimiq Pay to connect your wallet.');
         setIsLoading(false);
       }
     } catch (err) {
-      setGlobalError('Nimiq Wallet login error. Try email sign in.');
+      setGlobalError('Open this app inside Nimiq Pay to connect your wallet.');
       setIsLoading(false);
     }
   }

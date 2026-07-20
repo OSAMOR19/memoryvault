@@ -32,15 +32,25 @@ export default function NimiqWalletButton({ className = '' }) {
     };
   }, []);
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleConnect = async () => {
     setLoading(true);
+    setErrorMsg('');
     try {
       const res = await connectNimiqWallet();
       if (res?.success) {
         setAddress(res.address);
+      } else {
+        const msg = res?.error || 'Open this app inside Nimiq Pay to connect your wallet.';
+        setErrorMsg(msg);
+        alert(msg);
       }
     } catch (err) {
       console.error('[MemoryVault] Nimiq connection error:', err);
+      const msg = 'Open this app inside Nimiq Pay to connect your wallet.';
+      setErrorMsg(msg);
+      alert(msg);
     } finally {
       setLoading(false);
     }

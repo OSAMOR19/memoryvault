@@ -127,7 +127,7 @@ export async function connectNimiqWallet() {
     console.warn('[MemoryVault] Nimiq Hub address selection cancelled/error:', err);
   }
 
-  return { success: false, error: 'Could not connect Nimiq Wallet.' };
+  return { success: false, error: 'Open this app inside Nimiq Pay to connect your wallet.' };
 }
 
 export function disconnectNimiqWallet() {
@@ -138,7 +138,7 @@ export function disconnectNimiqWallet() {
  * Send NIM Transaction using Nimiq Wallet (Host or Hub API)
  */
 export async function sendNimiqTransaction({ recipient = 'NQ0700000000000000000000000000000000', amountNim = 1 }) {
-  if (typeof window === 'undefined') return { success: false, error: 'Window undefined' };
+  if (typeof window === 'undefined') return { success: false, error: 'Open this app inside Nimiq Pay to connect your wallet.' };
 
   const lunas = Math.round(amountNim * 1e5); // 1 NIM = 100,000 Lunas
 
@@ -153,7 +153,7 @@ export async function sendNimiqTransaction({ recipient = 'NQ07000000000000000000
       return { success: true, txHash };
     } catch (err) {
       console.warn('[MemoryVault] Nimiq host sendBasicTransaction error:', err);
-      return { success: false, error: err.message || 'Transaction cancelled or failed.' };
+      return { success: false, error: err.message || 'Open this app inside Nimiq Pay to connect your wallet.' };
     }
   }
 
@@ -172,10 +172,10 @@ export async function sendNimiqTransaction({ recipient = 'NQ07000000000000000000
     }
   } catch (err) {
     console.warn('[MemoryVault] Nimiq Hub checkout error:', err);
-    return { success: false, error: err.message || 'Transaction cancelled or failed.' };
+    return { success: false, error: err.message || 'Open this app inside Nimiq Pay to connect your wallet.' };
   }
 
-  return { success: false, error: 'Nimiq Wallet integration unavailable.' };
+  return { success: false, error: 'Open this app inside Nimiq Pay to connect your wallet.' };
 }
 
 export { getHostLanguage };
