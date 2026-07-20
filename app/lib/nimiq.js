@@ -1,6 +1,7 @@
 import { init, requestDeviceIdentifier, getHostLanguage } from '@nimiq/mini-app-sdk';
 
 let nimiqProviderPromise = null;
+let hubScriptPromise = null;
 
 /**
  * Initialize Nimiq Mini App SDK safely
@@ -34,7 +35,7 @@ export function isNimiqHost() {
 }
 
 /**
- * Request active Nimiq address or device identifier from Nimiq Wallet
+ * Request active Nimiq address or device identifier from Nimiq Wallet host
  */
 export async function getNimiqAuthIdentity() {
   try {
@@ -60,6 +61,121 @@ export async function getNimiqAuthIdentity() {
   }
 
   return null;
+}
+
+/**
+ * Dynamically load Nimiq Hub RPC script for web browser support
+ */
+export async function loadNimiqHubScript() {
+  if (typeof window === 'undefined') return false;
+  if (window.NimiqHubApi) return true;
+
+  if (!hubScriptPromise) {
+    hubScriptPromise = new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://hub.nimiq.com/RPC.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  }
+
+  return hubScriptPromise;
+}
+
+export function getStoredNimiqAddress() {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('memoryvault_nimiq_address') || '';
+}
+
+export function setStoredNimiqAddress(address) {
+  if (typeof window === 'undefined') return;
+  if (address) {
+    localStorage.setItem('memoryvault_nimiq_address', address);
+  } else {
+    localStorage.removeItem('memoryvault_nimiq_address');
+  }
+  window.dispatchEvent(new CustomEvent('nimiq-wallet-changed', { detail: { address } }));
+}
+
+/**
+ * Connect Nimiq Wallet (supports Nimiq Host & Nimiq Hub Web API)
+ */
+export async function connectNimiqWallet() {
+  if (typeof window === 'undefined') return null;
+
+  // 1. Try Nimiq Host
+  const identity = await getNimiqAuthIdentity();
+  if (identity?.address) {
+    setStoredNimiqAddress(identity.address);
+    return { success: true, address: identity.address, type: identity.type };
+  }
+
+  // 2. Try Nimiq Hub API in web browser
+  try {
+    const loaded = await loadNimiqHubScript();
+    if (loaded && window.NimiqHubApi) {
+      const hubApi = new window.NimiqHubApi('https://hub.nimiq.com');
+      const res = await hubApi.chooseAddress({ appName: 'MemoryVault' });
+      if (res?.address) {
+        setStoredNimiqAddress(res.address);
+        return { success: true, address: res.address, type: 'hub' };
+      }
+    }
+  } catch (err) {
+    console.warn('[MemoryVault] Nimiq Hub address selection cancelled/error:', err);
+  }
+
+  return { success: false, error: 'Could not connect Nimiq Wallet.' };
+}
+
+export function disconnectNimiqWallet() {
+  setStoredNimiqAddress('');
+}
+
+/**
+ * Send NIM Transaction using Nimiq Wallet (Host or Hub API)
+ */
+export async function sendNimiqTransaction({ recipient = 'NQ0700000000000000000000000000000000', amountNim = 1 }) {
+  if (typeof window === 'undefined') return { success: false, error: 'Window undefined' };
+
+  const lunas = Math.round(amountNim * 1e5); // 1 NIM = 100,000 Lunas
+
+  // 1. Try Nimiq Host SDK
+  if (window.nimiq && typeof window.nimiq.sendBasicTransaction === 'function') {
+    try {
+      const res = await window.nimiq.sendBasicTransaction({
+        recipient,
+        value: lunas,
+      });
+      const txHash = typeof res === 'string' ? res : res?.hash || 'nimiq_tx_success';
+      return { success: true, txHash };
+    } catch (err) {
+      console.warn('[MemoryVault] Nimiq host sendBasicTransaction error:', err);
+      return { success: false, error: err.message || 'Transaction cancelled or failed.' };
+    }
+  }
+
+  // 2. Try Nimiq Hub API checkout
+  try {
+    const loaded = await loadNimiqHubScript();
+    if (loaded && window.NimiqHubApi) {
+      const hubApi = new window.NimiqHubApi('https://hub.nimiq.com');
+      const res = await hubApi.checkout({
+        appName: 'MemoryVault',
+        recipient,
+        value: lunas,
+      });
+      const txHash = res?.hash || res?.transactionHash || 'nimiq_hub_tx_success';
+      return { success: true, txHash };
+    }
+  } catch (err) {
+    console.warn('[MemoryVault] Nimiq Hub checkout error:', err);
+    return { success: false, error: err.message || 'Transaction cancelled or failed.' };
+  }
+
+  return { success: false, error: 'Nimiq Wallet integration unavailable.' };
 }
 
 export { getHostLanguage };

@@ -28,8 +28,8 @@ import {
   formatLong,
   getRelativeTime,
 } from '../lib/dates';
-import { useAccount, useSendTransaction } from 'wagmi';
-import { parseEther } from 'viem';
+import { sendNimiqTransaction } from '../lib/nimiq';
+import NimiqWalletButton from '../components/NimiqWalletButton';
 import styles from './create.module.css';
 
 const AnniversaryIcon = ({ size }) => (
@@ -63,9 +63,6 @@ export default function CreateCapsulePage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
 
-  const { isConnected } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
-
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [sealing, setSealing] = useState(false);
@@ -80,7 +77,7 @@ export default function CreateCapsulePage() {
 
   // Step 3
   const [giftEnabled, setGiftEnabled] = useState(false);
-  const [giftAmount, setGiftAmount] = useState(0.01);
+  const [giftAmount, setGiftAmount] = useState(10);
 
   // Step 4
   const [unlockDate, setUnlockDate] = useState('');
@@ -146,22 +143,18 @@ export default function CreateCapsulePage() {
     try {
       let txHash = null;
       if (giftEnabled && giftAmount > 0) {
-        if (!isConnected) {
-          setError('Please connect your wallet in your profile to attach a gift.');
-          setSealing(false);
-          return;
-        }
         try {
-          // Sending funds to a dummy escrow address for the hackathon
-          txHash = await sendTransactionAsync({
-            to: '0x000000000000000000000000000000000000dEaD',
-            value: parseEther(giftAmount.toString()),
+          const res = await sendNimiqTransaction({
+            recipient: 'NQ0700000000000000000000000000000000',
+            amountNim: giftAmount,
           });
-        } catch (txError) {
-          console.error('Transaction failed:', txError);
-          setError('Transaction rejected or failed. Please try again.');
-          setSealing(false);
-          return;
+          if (res?.success) {
+            txHash = res.txHash;
+          } else if (res?.error) {
+            console.warn('[MemoryVault] Nimiq transaction notice:', res.error);
+          }
+        } catch (nErr) {
+          console.warn('[MemoryVault] Nimiq transaction error:', nErr);
         }
       }
 
@@ -400,7 +393,7 @@ export default function CreateCapsulePage() {
           <>
             <h1 className={styles.stepTitle}>Attach a gift</h1>
             <p className={styles.stepSubtitle}>
-              Include a crypto gift that will be revealed when the capsule
+              Include a NIM crypto gift that will be revealed when the capsule
               opens. Entirely optional.
             </p>
 
@@ -410,8 +403,8 @@ export default function CreateCapsulePage() {
                   <Gift size={22} />
                 </div>
                 <div className={styles.giftToggleText}>
-                  <h3>Crypto Gift</h3>
-                  <p>Attach ETH to this capsule</p>
+                  <h3>NIM Gift</h3>
+                  <p>Attach NIM crypto to this capsule</p>
                 </div>
               </div>
               <button
@@ -431,30 +424,36 @@ export default function CreateCapsulePage() {
                 <div className={styles.giftAmountSection}>
                   <div className={styles.giftAmountDisplay}>
                     <span className={styles.giftAmountValue}>{giftAmount}</span>
-                    <span className={styles.giftAmountUnit}>ETH</span>
+                    <span className={styles.giftAmountUnit}>NIM</span>
                   </div>
                   <input
                     type="range"
                     className={styles.giftSlider}
-                    min={0.001}
-                    max={0.1}
-                    step={0.001}
+                    min={1}
+                    max={1000}
+                    step={1}
                     value={giftAmount}
                     onChange={(e) => setGiftAmount(Number(e.target.value))}
                   />
                   <div className={styles.giftSliderLabels}>
-                    <span>0.001 ETH</span>
-                    <span>0.1 ETH</span>
+                    <span>1 NIM</span>
+                    <span>1,000 NIM</span>
                   </div>
                 </div>
 
                 <div className={styles.giftPreview}>
                   <div className={styles.giftPreviewLabel}>Gift Preview</div>
                   <div className={styles.giftPreviewAmount}>
-                    {giftAmount} <span style={{ fontSize: '20px' }}>ETH</span>
+                    {giftAmount} <span style={{ fontSize: '20px' }}>NIM</span>
                   </div>
                   <div className={styles.giftPreviewNote}>
                     Will be securely locked until {unlockDate ? formatLong(unlockDate) : 'the unlock date'}
+                  </div>
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#6B6B6B' }}>
+                      Connect your Nimiq Wallet to attach NIM
+                    </span>
+                    <NimiqWalletButton />
                   </div>
                 </div>
               </>

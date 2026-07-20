@@ -13,6 +13,14 @@ export const metadata = {
   title: "MemoryVault — Seal Your Memories in Time",
   description:
     "Create digital time capsules filled with messages, photos, and crypto gifts that unlock at a future date. Preserve what matters most.",
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   manifest: "/manifest.json",
   openGraph: {
     title: "MemoryVault — Seal Your Memories in Time",

@@ -130,24 +130,51 @@ export async function loginWithNimiqWallet(identity) {
   });
 
   if (signUpError) {
-    // If user already exists but password login failed, attempt password reset / direct sign in
-    if (signUpError.message.includes('already registered')) {
-      const { data: retryData } = await supabase.auth.signInWithPassword({
-        email: nimiqEmail,
-        password: nimiqPassword,
-      });
-      if (retryData?.session) {
-        return {
-          success: true,
-          user: {
-            id: retryData.user.id,
-            name: nimiqName,
-            email: retryData.user.email,
-            createdAt: retryData.user.created_at,
-          },
-        };
-      }
+    // If user already exists or email rate limit hit, retry signing in
+    const { data: retryData } = await supabase.auth.signInWithPassword({
+      email: nimiqEmail,
+      password: nimiqPassword,
+    });
+
+    if (retryData?.session && retryData?.user) {
+      const profile = await getProfile(retryData.user.id);
+      return {
+        success: true,
+        user: {
+          id: retryData.user.id,
+          name: profile?.name || nimiqName,
+          email: retryData.user.email,
+          createdAt: retryData.user.created_at,
+        },
+      };
     }
+
+    // Fallback to anonymous auth if rate limit persists
+    if (signUpError.message.includes('rate limit') || signUpError.message.includes('rate')) {
+      try {
+        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously({
+          options: { data: { name: nimiqName } },
+        });
+        if (anonData?.session && anonData?.user) {
+          return {
+            success: true,
+            user: {
+              id: anonData.user.id,
+              name: nimiqName,
+              email: 'nimiq_wallet@memoryvault.app',
+              createdAt: anonData.user.created_at,
+            },
+          };
+        }
+      } catch (e) {
+        console.warn('Anonymous fallback skipped:', e);
+      }
+      return {
+        success: false,
+        error: 'Email rate limit reached on Supabase. Please turn off "Confirm email" or add Resend in your Supabase Auth settings.',
+      };
+    }
+
     return { success: false, error: signUpError.message };
   }
 

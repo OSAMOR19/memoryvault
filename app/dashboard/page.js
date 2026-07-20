@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { getSession, logOut } from "../lib/auth";
 import { getCapsules, getEffectiveStatus } from "../lib/storage";
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import NimiqWalletButton from "../components/NimiqWalletButton";
 import styles from "./dashboard.module.css";
 
 const OCCASION_ICONS = {
@@ -214,7 +214,7 @@ export default function DashboardPage() {
               Create Capsule
             </Link>
 
-            <ConnectButton showBalance={false} chainStatus="none" />
+            <NimiqWalletButton />
 
             <div className={styles.profileContainer}>
               <button

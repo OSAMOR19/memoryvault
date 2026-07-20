@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { getSession, logOut, updateProfile, changePassword, deleteAccount } from '../lib/auth';
 import { getCapsules, getEffectiveStatus } from '../lib/storage';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import NimiqWalletButton from '../components/NimiqWalletButton';
 import styles from './profile.module.css';
 
 export default function ProfilePage() {
@@ -242,7 +242,7 @@ export default function ProfilePage() {
         <section className={styles.card}>
           <h3 className={styles.cardLabel}>Wallet Settings</h3>
           <div style={{ marginTop: '16px' }}>
-            <ConnectButton />
+            <NimiqWalletButton />
           </div>
         </section>
 
