@@ -97,17 +97,17 @@ export async function loginWithNimiqWallet(identity) {
   }
 
   const cleanId = identity.address.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  const nimiqEmail = `nimiq_${cleanId.slice(0, 16)}@memoryvault.internal`;
-  const nimiqPassword = `NimiqPass_${cleanId.slice(0, 24)}!`;
-  const nimiqName = identity.type === 'account' ? `Nimiq User (${identity.address.slice(0, 8)}...)` : 'Nimiq Wallet User';
+  const nimiqEmail = `nimiq_${cleanId}@memoryvault.com`;
+  const nimiqPassword = `NimiqPass_${cleanId}!`;
+  const nimiqName = identity.type === 'account' ? `Nimiq (${identity.address.slice(0, 10)}...)` : 'Nimiq Wallet User';
 
-  // Try signing in
+  // 1. Try signing in if user account already exists
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
     email: nimiqEmail,
     password: nimiqPassword,
   });
 
-  if (signInData?.user) {
+  if (signInData?.session && signInData?.user) {
     const profile = await getProfile(signInData.user.id);
     return {
       success: true,
@@ -120,7 +120,7 @@ export async function loginWithNimiqWallet(identity) {
     };
   }
 
-  // If user doesn't exist, auto-signup
+  // 2. If user doesn't exist, auto-signup
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email: nimiqEmail,
     password: nimiqPassword,
@@ -130,10 +130,28 @@ export async function loginWithNimiqWallet(identity) {
   });
 
   if (signUpError) {
+    // If user already exists but password login failed, attempt password reset / direct sign in
+    if (signUpError.message.includes('already registered')) {
+      const { data: retryData } = await supabase.auth.signInWithPassword({
+        email: nimiqEmail,
+        password: nimiqPassword,
+      });
+      if (retryData?.session) {
+        return {
+          success: true,
+          user: {
+            id: retryData.user.id,
+            name: nimiqName,
+            email: retryData.user.email,
+            createdAt: retryData.user.created_at,
+          },
+        };
+      }
+    }
     return { success: false, error: signUpError.message };
   }
 
-  if (signUpData?.user) {
+  if (signUpData?.session && signUpData?.user) {
     return {
       success: true,
       user: {
@@ -142,6 +160,14 @@ export async function loginWithNimiqWallet(identity) {
         email: signUpData.user.email,
         createdAt: signUpData.user.created_at,
       },
+    };
+  }
+
+  if (signUpData?.user && !signUpData?.session) {
+    // Supabase requires email confirmation in dashboard settings
+    return {
+      success: false,
+      error: 'Please disable "Confirm Email" in Supabase Auth settings to enable 1-click Nimiq Wallet login.',
     };
   }
 
