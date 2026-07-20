@@ -51,6 +51,7 @@ export default function SignupPage() {
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
@@ -70,12 +71,13 @@ export default function SignupPage() {
     // Validate all fields
     const newErrors = {};
     const nameErr = validateName(name);
-    const emailErr = validateEmail(email);
-    const passErr = validatePassword(password);
-
     if (nameErr) newErrors.name = nameErr;
+
+    const emailErr = validateEmail(email);
     if (emailErr) newErrors.email = emailErr;
-    if (passErr) newErrors.password = passErr;
+
+    const pwErr = validatePassword(password);
+    if (pwErr) newErrors.password = pwErr;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -93,8 +95,7 @@ export default function SignupPage() {
         setGlobalError('');
         setIsLoading(false);
         // Show confirmation message — user must verify email
-        alert('Account created! Please check your email to confirm your account, then log in.');
-        router.push('/login');
+        setShowSuccessModal(true);
       } else {
         setGlobalError(result.error);
         setIsLoading(false);
@@ -113,7 +114,7 @@ export default function SignupPage() {
       {/* ── Left Branding Panel ── */}
       <aside className={styles.brandPanel}>
         <div className={styles.decorativeIcons}>
-          <Heart size={48} className={`${styles.decorIcon} ${styles.decorIcon1}`} />
+          <img src="/Sheba.svg" alt="Love" className={`${styles.decorIcon} ${styles.decorIcon1}`} width={48} height={48} style={{ display: 'block' }} />
           <Sparkles size={40} className={`${styles.decorIcon} ${styles.decorIcon2}`} />
           <Gift size={36} className={`${styles.decorIcon} ${styles.decorIcon3}`} />
           <Clock size={44} className={`${styles.decorIcon} ${styles.decorIcon4}`} />
@@ -343,6 +344,27 @@ export default function SignupPage() {
           </p>
         </div>
       </main>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalIcon}>
+              <Mail size={32} />
+            </div>
+            <h3 className={styles.modalTitle}>Account created!</h3>
+            <p className={styles.modalDescription}>
+              Please check your email to confirm your account, then log in.
+            </p>
+            <button
+              onClick={() => router.push('/login')}
+              className={styles.modalButton}
+            >
+              Go to Sign In
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

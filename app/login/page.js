@@ -83,10 +83,10 @@ export default function LoginPage() {
       {/* ── Left Branding Panel ── */}
       <aside className={styles.brandPanel}>
         <div className={styles.decorativeIcons}>
-          <Lock size={48} className={`${styles.decorIcon} ${styles.decorIcon1}`} />
+          <img src="/Sealed.svg" alt="Lock" className={`${styles.decorIcon} ${styles.decorIcon1}`} width={48} height={48} style={{ display: 'block' }} />
           <Clock size={40} className={`${styles.decorIcon} ${styles.decorIcon2}`} />
           <Gift size={36} className={`${styles.decorIcon} ${styles.decorIcon3}`} />
-          <Heart size={44} className={`${styles.decorIcon} ${styles.decorIcon4}`} />
+          <img src="/Sheba.svg" alt="Love" className={`${styles.decorIcon} ${styles.decorIcon4}`} width={44} height={44} style={{ display: 'block' }} />
         </div>
 
         <div className={styles.brandPanelInner}>

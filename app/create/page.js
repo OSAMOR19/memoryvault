@@ -30,9 +30,17 @@ import {
 } from '../lib/dates';
 import styles from './create.module.css';
 
+const AnniversaryIcon = ({ size }) => (
+  <img src="/Sheba.svg" alt="Anniversary" width={size} height={size} style={{ display: 'block' }} />
+);
+
+const ShieldIcon = ({ size }) => (
+  <img src="/Sealed.svg" alt="Private & Secure" width={size} height={size} style={{ display: 'block' }} />
+);
+
 const OCCASIONS = [
   { id: 'birthday', label: 'Birthday', Icon: Cake },
-  { id: 'anniversary', label: 'Anniversary', Icon: Heart },
+  { id: 'anniversary', label: 'Anniversary', Icon: AnniversaryIcon },
   { id: 'graduation', label: 'Graduation', Icon: GraduationCap },
   { id: 'love-letter', label: 'Love Letter', Icon: Mail },
   { id: 'just-because', label: 'Just Because', Icon: Sparkles },
@@ -196,7 +204,7 @@ export default function CreateCapsulePage() {
       <div className={styles.page}>
         <div className={styles.sealOverlay}>
           <div className={styles.sealCircle}>
-            <Shield size={56} strokeWidth={1.5} />
+            <ShieldIcon size={140} />
           </div>
           <p className={styles.sealMessage}>Your capsule is sealed</p>
           <p className={styles.sealSubtext}>
@@ -528,7 +536,7 @@ export default function CreateCapsulePage() {
               type="button"
               disabled={!unlockDate}
             >
-              <Shield size={20} />
+              <ShieldIcon size={20} />
               Seal This Capsule
             </button>
           )}

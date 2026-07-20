@@ -27,9 +27,13 @@ import {
 import { formatLong, formatMedium, getCountdown } from '../../lib/dates';
 import styles from './capsule.module.css';
 
+const AnniversaryIcon = ({ size }) => (
+  <img src="/Sheba.svg" alt="Anniversary" width={size} height={size} style={{ display: 'block' }} />
+);
+
 const OCCASION_ICONS = {
   birthday: Cake,
-  anniversary: Heart,
+  anniversary: AnniversaryIcon,
   graduation: GraduationCap,
   'love-letter': Mail,
   'just-because': Sparkles,
@@ -253,7 +257,7 @@ export default function CapsuleDetailPage({ params }) {
         {(status === 'sealed' || status === 'soon') && (
           <div className={styles.sealedContainer}>
             <div className={styles.waxSeal}>
-              <OccasionIcon size={44} strokeWidth={1.5} />
+              <OccasionIcon size={120} strokeWidth={1.5} />
             </div>
 
             <h1 className={styles.capsuleTitle}>{capsule.title}</h1>
@@ -324,7 +328,7 @@ export default function CapsuleDetailPage({ params }) {
         {status === 'unlockable' && (
           <div className={styles.unlockableContainer}>
             <div className={styles.waxSeal}>
-              <OccasionIcon size={44} strokeWidth={1.5} />
+              <OccasionIcon size={120} strokeWidth={1.5} />
             </div>
 
             <h1 className={styles.capsuleTitle}>{capsule.title}</h1>

@@ -1,7 +1,11 @@
 "use client";
 
-import { Lock, Clock, Gift, Image, Mic, Shield } from "lucide-react";
+import { Lock, Clock, Gift, Image, Mic } from "lucide-react";
 import styles from "./FeaturesSection.module.css";
+
+const ShieldIcon = ({ size }) => (
+  <img src="/Sealed.svg" alt="Private & Secure" width={size} height={size} style={{ display: 'block' }} />
+);
 
 const features = [
   {
@@ -35,7 +39,7 @@ const features = [
       "Record your voice for a personal touch. Let your future self hear exactly how you felt.",
   },
   {
-    icon: Shield,
+    icon: ShieldIcon,
     title: "Private & Secure",
     description:
       "Your capsules are encrypted and personal. Only you decide who gets to open them.",
