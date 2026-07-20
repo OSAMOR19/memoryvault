@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { getSession, logOut } from "../lib/auth";
 import { getCapsules, getEffectiveStatus } from "../lib/storage";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import styles from "./dashboard.module.css";
 
 const OCCASION_ICONS = {
@@ -212,6 +213,8 @@ export default function DashboardPage() {
               <Plus size={18} />
               Create Capsule
             </Link>
+
+            <ConnectButton showBalance={false} chainStatus="none" />
 
             <div className={styles.profileContainer}>
               <button

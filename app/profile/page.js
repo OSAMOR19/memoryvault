@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { getSession, logOut, updateProfile, changePassword, deleteAccount } from '../lib/auth';
 import { getCapsules, getEffectiveStatus } from '../lib/storage';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import styles from './profile.module.css';
 
 export default function ProfilePage() {
@@ -234,6 +235,14 @@ export default function ProfilePage() {
                 <span>Member since {memberSince || 'recently'}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── Wallet Connection Card ── */}
+        <section className={styles.card}>
+          <h3 className={styles.cardLabel}>Wallet Settings</h3>
+          <div style={{ marginTop: '16px' }}>
+            <ConnectButton />
           </div>
         </section>
 

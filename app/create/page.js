@@ -28,6 +28,8 @@ import {
   formatLong,
   getRelativeTime,
 } from '../lib/dates';
+import { useAccount, useSendTransaction } from 'wagmi';
+import { parseEther } from 'viem';
 import styles from './create.module.css';
 
 const AnniversaryIcon = ({ size }) => (
@@ -61,6 +63,9 @@ export default function CreateCapsulePage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
 
+  const { isConnected } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
+
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [sealing, setSealing] = useState(false);
@@ -75,7 +80,7 @@ export default function CreateCapsulePage() {
 
   // Step 3
   const [giftEnabled, setGiftEnabled] = useState(false);
-  const [giftAmount, setGiftAmount] = useState(10);
+  const [giftAmount, setGiftAmount] = useState(0.01);
 
   // Step 4
   const [unlockDate, setUnlockDate] = useState('');
@@ -139,12 +144,33 @@ export default function CreateCapsulePage() {
     setSealing(true);
 
     try {
+      let txHash = null;
+      if (giftEnabled && giftAmount > 0) {
+        if (!isConnected) {
+          setError('Please connect your wallet in your profile to attach a gift.');
+          setSealing(false);
+          return;
+        }
+        try {
+          // Sending funds to a dummy escrow address for the hackathon
+          txHash = await sendTransactionAsync({
+            to: '0x000000000000000000000000000000000000dEaD',
+            value: parseEther(giftAmount.toString()),
+          });
+        } catch (txError) {
+          console.error('Transaction failed:', txError);
+          setError('Transaction rejected or failed. Please try again.');
+          setSealing(false);
+          return;
+        }
+      }
+
       const capsule = await addCapsule({
         title: title.trim(),
         occasion,
         message: message.trim(),
         photos,
-        gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0 },
+        gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0, txHash },
         unlockDate: new Date(unlockDate).toISOString(),
       });
 
@@ -374,7 +400,7 @@ export default function CreateCapsulePage() {
           <>
             <h1 className={styles.stepTitle}>Attach a gift</h1>
             <p className={styles.stepSubtitle}>
-              Include a NIM crypto gift that will be revealed when the capsule
+              Include a crypto gift that will be revealed when the capsule
               opens. Entirely optional.
             </p>
 
@@ -384,8 +410,8 @@ export default function CreateCapsulePage() {
                   <Gift size={22} />
                 </div>
                 <div className={styles.giftToggleText}>
-                  <h3>NIM Gift</h3>
-                  <p>Attach crypto to this capsule</p>
+                  <h3>Crypto Gift</h3>
+                  <p>Attach ETH to this capsule</p>
                 </div>
               </div>
               <button
@@ -405,30 +431,31 @@ export default function CreateCapsulePage() {
                 <div className={styles.giftAmountSection}>
                   <div className={styles.giftAmountDisplay}>
                     <span className={styles.giftAmountValue}>{giftAmount}</span>
-                    <span className={styles.giftAmountUnit}>NIM</span>
+                    <span className={styles.giftAmountUnit}>ETH</span>
                   </div>
                   <input
                     type="range"
                     className={styles.giftSlider}
-                    min={1}
-                    max={1000}
+                    min={0.001}
+                    max={0.1}
+                    step={0.001}
                     value={giftAmount}
                     onChange={(e) => setGiftAmount(Number(e.target.value))}
                   />
                   <div className={styles.giftSliderLabels}>
-                    <span>1 NIM</span>
-                    <span>1,000 NIM</span>
+                    <span>0.001 ETH</span>
+                    <span>0.1 ETH</span>
                   </div>
                 </div>
 
                 <div className={styles.giftPreview}>
                   <div className={styles.giftPreviewLabel}>Gift Preview</div>
                   <div className={styles.giftPreviewAmount}>
-                    {giftAmount} NIM
+                    {giftAmount} <span style={{ fontSize: '20px' }}>ETH</span>
                   </div>
-                  <p className={styles.giftPreviewNote}>
-                    This amount will be locked inside the capsule
-                  </p>
+                  <div className={styles.giftPreviewNote}>
+                    Will be securely locked until {unlockDate ? formatLong(unlockDate) : 'the unlock date'}
+                  </div>
                 </div>
               </>
             )}

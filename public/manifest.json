@@ -1,0 +1,16 @@
+{
+  "name": "MemoryVault",
+  "short_name": "MemoryVault",
+  "description": "Digital time capsules sealed with messages, photos, and crypto gifts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#E9B114",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

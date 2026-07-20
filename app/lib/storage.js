@@ -61,6 +61,7 @@ export async function addCapsule(capsuleData) {
       message: capsuleData.message || '',
       gift_enabled: capsuleData.gift?.enabled || false,
       gift_amount: capsuleData.gift?.amount || 0,
+      tx_hash: capsuleData.gift?.txHash || null,
       unlock_date: capsuleData.unlockDate,
       status: 'sealed',
     })
@@ -201,7 +202,7 @@ function transformCapsule(row) {
     photos: (row.capsule_photos || [])
       .sort((a, b) => a.display_order - b.display_order)
       .map(p => p.storage_path),
-    gift: { enabled: row.gift_enabled, amount: row.gift_amount },
+    gift: { enabled: row.gift_enabled, amount: row.gift_amount, txHash: row.tx_hash },
     unlockDate: row.unlock_date,
     createdAt: row.created_at,
     openedAt: row.opened_at,

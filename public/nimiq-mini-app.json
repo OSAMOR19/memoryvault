@@ -1,0 +1,10 @@
+{
+  "id": "memoryvault",
+  "name": "MemoryVault",
+  "icon": "/logo.png",
+  "description": "Secure digital time capsules sealed with messages, photos, and gifts.",
+  "category": "utility",
+  "version": "1.0.0",
+  "developer": "MemoryVault Team",
+  "website": "https://memoryvault-kappa.vercel.app"
+}

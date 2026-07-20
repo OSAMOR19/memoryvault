@@ -89,6 +89,65 @@ export async function signUp({ name, email, password }) {
   };
 }
 
+// ── Nimiq Wallet 1-Click Login ───────────────────────────
+
+export async function loginWithNimiqWallet(identity) {
+  if (!identity || !identity.address) {
+    return { success: false, error: 'Could not detect Nimiq Wallet account.' };
+  }
+
+  const cleanId = identity.address.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const nimiqEmail = `nimiq_${cleanId.slice(0, 16)}@memoryvault.internal`;
+  const nimiqPassword = `NimiqPass_${cleanId.slice(0, 24)}!`;
+  const nimiqName = identity.type === 'account' ? `Nimiq User (${identity.address.slice(0, 8)}...)` : 'Nimiq Wallet User';
+
+  // Try signing in
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email: nimiqEmail,
+    password: nimiqPassword,
+  });
+
+  if (signInData?.user) {
+    const profile = await getProfile(signInData.user.id);
+    return {
+      success: true,
+      user: {
+        id: signInData.user.id,
+        name: profile?.name || nimiqName,
+        email: signInData.user.email,
+        createdAt: signInData.user.created_at,
+      },
+    };
+  }
+
+  // If user doesn't exist, auto-signup
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email: nimiqEmail,
+    password: nimiqPassword,
+    options: {
+      data: { name: nimiqName },
+    },
+  });
+
+  if (signUpError) {
+    return { success: false, error: signUpError.message };
+  }
+
+  if (signUpData?.user) {
+    return {
+      success: true,
+      user: {
+        id: signUpData.user.id,
+        name: nimiqName,
+        email: signUpData.user.email,
+        createdAt: signUpData.user.created_at,
+      },
+    };
+  }
+
+  return { success: false, error: 'Failed to authenticate Nimiq Wallet.' };
+}
+
 // ── Google OAuth ──────────────────────────────────────────
 
 export async function signInWithGoogle() {

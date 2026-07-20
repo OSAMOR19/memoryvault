@@ -16,7 +16,8 @@ import {
   ArrowRight,
   Vault,
 } from 'lucide-react';
-import { logIn, signInWithGoogle, getRememberedEmail, isAuthenticated } from '../lib/auth';
+import { logIn, signInWithGoogle, getRememberedEmail, isAuthenticated, loginWithNimiqWallet } from '../lib/auth';
+import { getNimiqAuthIdentity, isNimiqHost } from '../lib/nimiq';
 import styles from './login.module.css';
 
 export default function LoginPage() {
@@ -37,6 +38,11 @@ export default function LoginPage() {
         router.push('/dashboard');
         return;
       }
+
+      // Auto-detect Nimiq Host and prompt 1-click login
+      if (isNimiqHost()) {
+        handleNimiqLogin();
+      }
     })();
     // Pre-fill remembered email
     const remembered = getRememberedEmail();
@@ -45,6 +51,29 @@ export default function LoginPage() {
       setRemember(true);
     }
   }, [router]);
+
+  async function handleNimiqLogin() {
+    setIsLoading(true);
+    setGlobalError('');
+    try {
+      const identity = await getNimiqAuthIdentity();
+      if (!identity) {
+        setGlobalError('Unable to connect to Nimiq Wallet. Please try logging in with email.');
+        setIsLoading(false);
+        return;
+      }
+      const result = await loginWithNimiqWallet(identity);
+      if (result.success) {
+        router.push('/dashboard');
+      } else {
+        setGlobalError(result.error || 'Failed to sign in with Nimiq Wallet.');
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setGlobalError('Nimiq Wallet login error. Try email sign in.');
+      setIsLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -147,8 +176,19 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Social Buttons */}
+            {/* Social & Nimiq Buttons */}
             <div className={styles.socialButtons}>
+              <button
+                type="button"
+                className={styles.socialButton}
+                onClick={handleNimiqLogin}
+                style={{ background: 'linear-gradient(135deg, #E9B114, #C49710)', color: '#FFF', fontWeight: 600, border: 'none', marginBottom: '8px' }}
+              >
+                <span className={styles.socialIcon}>
+                  <img src="/Sheba.svg" alt="Nimiq" width={20} height={20} style={{ display: 'block' }} />
+                </span>
+                Continue with Nimiq Wallet
+              </button>
               <button type="button" className={styles.socialButton} onClick={signInWithGoogle}>
                 <span className={styles.socialIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

@@ -25,7 +25,9 @@ import {
   validatePassword,
   validateName,
   isAuthenticated,
+  loginWithNimiqWallet,
 } from '../lib/auth';
+import { getNimiqAuthIdentity, isNimiqHost } from '../lib/nimiq';
 import styles from './signup.module.css';
 
 function getPasswordStrength(password) {
@@ -59,9 +61,36 @@ export default function SignupPage() {
     (async () => {
       if (await isAuthenticated()) {
         router.push('/dashboard');
+        return;
+      }
+      if (isNimiqHost()) {
+        handleNimiqSignup();
       }
     })();
   }, [router]);
+
+  async function handleNimiqSignup() {
+    setIsLoading(true);
+    setGlobalError('');
+    try {
+      const identity = await getNimiqAuthIdentity();
+      if (!identity) {
+        setGlobalError('Could not connect to Nimiq Wallet.');
+        setIsLoading(false);
+        return;
+      }
+      const result = await loginWithNimiqWallet(identity);
+      if (result.success) {
+        router.push('/dashboard');
+      } else {
+        setGlobalError(result.error || 'Failed to authenticate Nimiq Wallet.');
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setGlobalError('Nimiq Wallet error.');
+      setIsLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -167,8 +196,19 @@ export default function SignupPage() {
               </p>
             </div>
 
-            {/* Social Buttons */}
+            {/* Social & Nimiq Buttons */}
             <div className={styles.socialButtons}>
+              <button
+                type="button"
+                className={styles.socialButton}
+                onClick={handleNimiqSignup}
+                style={{ background: 'linear-gradient(135deg, #E9B114, #C49710)', color: '#FFF', fontWeight: 600, border: 'none', marginBottom: '8px' }}
+              >
+                <span className={styles.socialIcon}>
+                  <img src="/Sheba.svg" alt="Nimiq" width={20} height={20} style={{ display: 'block' }} />
+                </span>
+                Continue with Nimiq Wallet
+              </button>
               <button type="button" className={styles.socialButton} onClick={signInWithGoogle}>
                 <span className={styles.socialIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
