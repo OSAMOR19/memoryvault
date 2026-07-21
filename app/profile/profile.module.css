@@ -716,3 +716,73 @@
     padding: 18px 12px;
   }
 }
+
+/* ── Mobile & Nimiq Pay WebView Responsiveness (≤520px) ── */
+@media (max-width: 520px) {
+  .page {
+    overflow-x: hidden;
+  }
+
+  .content {
+    padding: 16px 12px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .card {
+    padding: 16px 12px;
+    border-radius: 14px;
+    box-sizing: border-border-box;
+    max-width: 100%;
+  }
+
+  .userHeader {
+    gap: 12px;
+  }
+
+  .avatarLarge {
+    width: 48px;
+    height: 48px;
+    font-size: 1.125rem;
+  }
+
+  .userName {
+    font-size: 1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .statItem {
+    padding: 12px 6px;
+  }
+
+  .statValue {
+    font-size: 1rem;
+  }
+
+  .editNameRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editNameInput {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .passwordActions,
+  .deleteActions {
+    flex-direction: column;
+  }
+
+  .primaryBtn,
+  .secondaryBtn,
+  .deleteBtn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}

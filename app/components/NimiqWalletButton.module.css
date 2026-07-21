@@ -76,6 +76,7 @@
   top: calc(100% + 6px);
   right: 0;
   width: 220px;
+  max-width: calc(100vw - 40px);
   background: #FFFFFF;
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
@@ -87,7 +88,7 @@
 
 .dropdownHeader {
   display: flex;
-  flex-col: column;
+  flex-direction: column;
   gap: 4px;
 }
 
