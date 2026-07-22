@@ -214,7 +214,7 @@ export default function DashboardPage() {
               Create Capsule
             </Link>
 
-            <NimiqWalletButton />
+            <NimiqWalletButton className={styles.walletBtn} />
 
             <div className={styles.profileContainer}>
               <button

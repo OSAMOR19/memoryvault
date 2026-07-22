@@ -144,3 +144,21 @@
     transform: translateY(0);
   }
 }
+
+@media (max-width: 520px) {
+  .container {
+    width: 100%;
+    display: flex;
+  }
+  .connectBtn, .connectedBtn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    font-size: 11px;
+    padding: 8px 6px;
+    gap: 6px;
+    white-space: nowrap;
+  }
+}
+
+

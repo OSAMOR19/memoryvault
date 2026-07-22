@@ -769,3 +769,26 @@
   }
 }
 
+@media (max-width: 520px) {
+  .headerActions {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .createBtn,
+  .walletBtn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    box-sizing: border-box;
+    font-size: 11px;
+    padding: 8px 6px;
+    gap: 6px;
+    white-space: nowrap;
+  }
+}
+
+
+
