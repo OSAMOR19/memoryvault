@@ -1,5 +1,5 @@
 /**
- * MemoryVault — Auth Utilities (Supabase)
+ * NimCapsule — Auth Utilities (Supabase)
  *
  * All authentication flows powered by Supabase Auth.
  */
@@ -97,7 +97,7 @@ export async function loginWithNimiqWallet(identity) {
   }
 
   const cleanId = identity.address.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  const nimiqEmail = `nimiq_${cleanId}@memoryvault.com`;
+  const nimiqEmail = `nimiq_${cleanId}@nimcapsule.com`;
   const nimiqPassword = `NimiqPass_${cleanId}!`;
   const nimiqName = identity.type === 'account' ? `Nimiq (${identity.address.slice(0, 10)}...)` : 'Nimiq Wallet User';
 
@@ -161,7 +161,7 @@ export async function loginWithNimiqWallet(identity) {
             user: {
               id: anonData.user.id,
               name: nimiqName,
-              email: 'nimiq_wallet@memoryvault.app',
+              email: 'nimiq_wallet@nimcapsule.app',
               createdAt: anonData.user.created_at,
             },
           };
@@ -242,9 +242,9 @@ export async function logIn({ email, password, remember = false }) {
 
   // Store remembered email
   if (remember) {
-    try { localStorage.setItem('memoryvault_remember', email); } catch {}
+    try { localStorage.setItem('nimcapsule_remember', email); } catch {}
   } else {
-    try { localStorage.removeItem('memoryvault_remember'); } catch {}
+    try { localStorage.removeItem('nimcapsule_remember'); } catch {}
   }
 
   const profile = await getProfile(data.user.id);
@@ -358,7 +358,7 @@ export async function deleteAccount(userId) {
 
 export function getRememberedEmail() {
   if (typeof window === 'undefined') return '';
-  return localStorage.getItem('memoryvault_remember') || '';
+  return localStorage.getItem('nimcapsule_remember') || '';
 }
 
 // ── Legacy cleanup ────────────────────────────────────────
@@ -368,6 +368,7 @@ export function clearOldData() {
   const oldKeys = [
     'memoryvault_capsules_v1', 'memoryvault_onboarded',
     'memoryvault_user', 'memoryvault_auth', 'memoryvault_capsules',
+    'nimcapsule_remember',
   ];
   oldKeys.forEach((key) => {
     try { localStorage.removeItem(key); } catch {}

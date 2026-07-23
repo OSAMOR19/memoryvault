@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════
+   NimCapsule — Share Link Button Styles
+   Default · Compact · Prominent variants
+   ═══════════════════════════════════════════════════ */
+
+.shareButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-geist, 'Inter', sans-serif);
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.shareButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: linear-gradient(135deg, rgba(233, 177, 20, 0.1), rgba(233, 177, 20, 0.05));
+  border-radius: inherit;
+}
+
+.shareButton:hover::before {
+  opacity: 1;
+}
+
+.shareButton:active {
+  transform: scale(0.97);
+}
+
+/* ── Icon ── */
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.copied .iconWrap {
+  color: #22c55e;
+  animation: popIn 0.3s ease;
+}
+
+/* ── Label ── */
+
+.label {
+  transition: color 0.25s ease;
+}
+
+.copied .label {
+  color: #22c55e;
+}
+
+/* ── Default Variant ── */
+
+.default {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(233, 177, 20, 0.08);
+  color: #B8860B;
+  border: 1px solid rgba(233, 177, 20, 0.2);
+}
+
+.default:hover {
+  background: rgba(233, 177, 20, 0.14);
+  border-color: rgba(233, 177, 20, 0.35);
+  box-shadow: 0 2px 12px rgba(233, 177, 20, 0.1);
+}
+
+.default.copied {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+/* ── Compact Variant ── */
+
+.compact {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(233, 177, 20, 0.06);
+  color: #B8860B;
+  border: 1px solid rgba(233, 177, 20, 0.15);
+}
+
+.compact:hover {
+  background: rgba(233, 177, 20, 0.12);
+  border-color: rgba(233, 177, 20, 0.3);
+}
+
+.compact.copied {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+/* ── Prominent Variant ── */
+
+.prominent {
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #E9B114, #C49710);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 16px rgba(233, 177, 20, 0.3), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.prominent:hover {
+  background: linear-gradient(135deg, #D4A00F, #B58A0E);
+  box-shadow: 0 6px 24px rgba(233, 177, 20, 0.35), 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.prominent:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.prominent.copied {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+}
+
+.prominent .label {
+  color: inherit;
+}
+
+.prominent .iconWrap {
+  color: inherit;
+}
+
+.prominent.copied .label,
+.prominent.copied .iconWrap {
+  color: #FFFFFF;
+}
+
+/* ── Animation ── */
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

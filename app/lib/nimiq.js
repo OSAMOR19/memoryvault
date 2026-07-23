@@ -17,7 +17,7 @@ export async function initNimiq() {
         const provider = await init({ timeout: 3000 });
         return provider;
       } catch (err) {
-        console.warn('[MemoryVault] Nimiq Mini App SDK not injected or timed out:', err);
+        console.warn('[NimCapsule] Nimiq Mini App SDK not injected or timed out:', err);
         return null;
       }
     })();
@@ -47,17 +47,17 @@ export async function getNimiqAuthIdentity() {
       }
     }
   } catch (e) {
-    console.warn('[MemoryVault] Error listing Nimiq accounts:', e);
+    console.warn('[NimCapsule] Error listing Nimiq accounts:', e);
   }
 
   // Fallback to Nimiq Device Identifier if available
   try {
-    const deviceId = await requestDeviceIdentifier({ reason: 'Authenticate MemoryVault' });
+    const deviceId = await requestDeviceIdentifier({ reason: 'Authenticate NimCapsule' });
     if (deviceId) {
       return { type: 'device', address: deviceId };
     }
   } catch (e) {
-    console.warn('[MemoryVault] Error requesting Nimiq device ID:', e);
+    console.warn('[NimCapsule] Error requesting Nimiq device ID:', e);
   }
 
   return null;
@@ -86,15 +86,15 @@ export async function loadNimiqHubScript() {
 
 export function getStoredNimiqAddress() {
   if (typeof window === 'undefined') return '';
-  return localStorage.getItem('memoryvault_nimiq_address') || '';
+  return localStorage.getItem('nimcapsule_nimiq_address') || '';
 }
 
 export function setStoredNimiqAddress(address) {
   if (typeof window === 'undefined') return;
   if (address) {
-    localStorage.setItem('memoryvault_nimiq_address', address);
+    localStorage.setItem('nimcapsule_nimiq_address', address);
   } else {
-    localStorage.removeItem('memoryvault_nimiq_address');
+    localStorage.removeItem('nimcapsule_nimiq_address');
   }
   window.dispatchEvent(new CustomEvent('nimiq-wallet-changed', { detail: { address } }));
 }
@@ -117,14 +117,14 @@ export async function connectNimiqWallet() {
     const loaded = await loadNimiqHubScript();
     if (loaded && window.NimiqHubApi) {
       const hubApi = new window.NimiqHubApi('https://hub.nimiq.com');
-      const res = await hubApi.chooseAddress({ appName: 'MemoryVault' });
+      const res = await hubApi.chooseAddress({ appName: 'NimCapsule' });
       if (res?.address) {
         setStoredNimiqAddress(res.address);
         return { success: true, address: res.address, type: 'hub' };
       }
     }
   } catch (err) {
-    console.warn('[MemoryVault] Nimiq Hub address selection cancelled/error:', err);
+    console.warn('[NimCapsule] Nimiq Hub address selection cancelled/error:', err);
   }
 
   return { success: false, error: 'Open this app inside Nimiq Pay to connect your wallet.' };
@@ -152,7 +152,7 @@ export async function sendNimiqTransaction({ recipient = 'NQ07000000000000000000
       const txHash = typeof res === 'string' ? res : res?.hash || 'nimiq_tx_success';
       return { success: true, txHash };
     } catch (err) {
-      console.warn('[MemoryVault] Nimiq host sendBasicTransaction error:', err);
+      console.warn('[NimCapsule] Nimiq host sendBasicTransaction error:', err);
       return { success: false, error: err.message || 'Open this app inside Nimiq Pay to connect your wallet.' };
     }
   }
@@ -163,7 +163,7 @@ export async function sendNimiqTransaction({ recipient = 'NQ07000000000000000000
     if (loaded && window.NimiqHubApi) {
       const hubApi = new window.NimiqHubApi('https://hub.nimiq.com');
       const res = await hubApi.checkout({
-        appName: 'MemoryVault',
+        appName: 'NimCapsule',
         recipient,
         value: lunas,
       });
@@ -171,7 +171,7 @@ export async function sendNimiqTransaction({ recipient = 'NQ07000000000000000000
       return { success: true, txHash };
     }
   } catch (err) {
-    console.warn('[MemoryVault] Nimiq Hub checkout error:', err);
+    console.warn('[NimCapsule] Nimiq Hub checkout error:', err);
     return { success: false, error: err.message || 'Open this app inside Nimiq Pay to connect your wallet.' };
   }
 

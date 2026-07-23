@@ -1,5 +1,5 @@
 /**
- * MemoryVault — Supabase Client
+ * NimCapsule — Supabase Client
  *
  * Singleton client for interacting with Supabase.
  * Requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -13,7 +13,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
-    '[MemoryVault] Supabase credentials missing. ' +
+    '[NimCapsule] Supabase credentials missing. ' +
     'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
   );
 }

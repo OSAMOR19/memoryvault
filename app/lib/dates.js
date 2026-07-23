@@ -1,5 +1,5 @@
 /**
- * MemoryVault — Date formatting and countdown utilities
+ * NimCapsule — Date formatting and countdown utilities
  */
 
 const MONTHS_FULL = [

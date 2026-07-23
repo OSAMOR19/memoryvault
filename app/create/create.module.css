@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   MemoryVault — Create Capsule Wizard Styles
+   NimCapsule — Create Capsule Wizard Styles
    Luxury minimalist · Premium stationery aesthetic
    ═══════════════════════════════════════════════════ */
 
@@ -855,6 +855,44 @@
   color: #9E9E9E;
   opacity: 0;
   animation: fadeInUp 0.5s ease 0.7s forwards;
+}
+
+/* ── Share Link Section (post-seal) ── */
+
+.shareLinkSection {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease 0.3s forwards;
+}
+
+.shareLinkLabel {
+  font-size: 14px;
+  color: #6B6B6B;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.viewCapsuleButton {
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-geist), 'Geist', sans-serif;
+  background: transparent;
+  color: #6B6B6B;
+  border: 1px solid #E5E1DA;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewCapsuleButton:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #D0CCC5;
+  color: #1A1A1A;
 }
 
 /* ── Validation Error ── */

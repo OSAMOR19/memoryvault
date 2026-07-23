@@ -1,11 +1,11 @@
 export const metadata = {
-  title: 'Create Account — MemoryVault',
+  title: 'Create Account — NimCapsule',
   description:
-    'Create your MemoryVault account and start preserving digital time capsules. Seal messages, photos, and gifts to be opened at a future date.',
+    'Create your NimCapsule account and start preserving digital time capsules. Seal messages, photos, and gifts to be opened at a future date.',
   openGraph: {
-    title: 'Create Account — MemoryVault',
+    title: 'Create Account — NimCapsule',
     description:
-      'Join MemoryVault and begin preserving your most precious memories for the future.',
+      'Join NimCapsule and begin preserving your most precious memories for the future.',
     type: 'website',
   },
 };

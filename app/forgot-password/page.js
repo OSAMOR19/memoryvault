@@ -50,9 +50,9 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className={styles.logo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </div>
 
         <div className={styles.card}>

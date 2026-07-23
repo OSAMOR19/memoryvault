@@ -1,5 +1,5 @@
 /**
- * MemoryVault — Capsule Storage (Supabase)
+ * NimCapsule — Capsule Storage (Supabase)
  *
  * All capsule CRUD powered by Supabase Postgres + Storage.
  */
@@ -22,7 +22,7 @@ export async function getCapsules() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('[MemoryVault] getCapsules error:', error.message);
+    console.error('[NimCapsule] getCapsules error:', error.message);
     return [];
   }
 
@@ -139,7 +139,7 @@ async function uploadPhotos(capsuleId, userId, photoDataUrls) {
         .upload(path, blob, { contentType: blob.type });
 
       if (uploadError) {
-        console.error('[MemoryVault] Photo upload error:', uploadError.message);
+        console.error('[NimCapsule] Photo upload error:', uploadError.message);
         continue;
       }
 
@@ -150,7 +150,7 @@ async function uploadPhotos(capsuleId, userId, photoDataUrls) {
         display_order: i,
       });
     } catch (err) {
-      console.error('[MemoryVault] Photo processing error:', err);
+      console.error('[NimCapsule] Photo processing error:', err);
     }
   }
 }

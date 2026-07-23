@@ -47,7 +47,7 @@ export default function NimiqWalletButton({ className = '' }) {
         alert(msg);
       }
     } catch (err) {
-      console.error('[MemoryVault] Nimiq connection error:', err);
+      console.error('[NimCapsule] Nimiq connection error:', err);
       const msg = 'Open this app inside Nimiq Pay to connect your wallet.';
       setErrorMsg(msg);
       alert(msg);

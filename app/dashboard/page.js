@@ -141,9 +141,9 @@ export default function DashboardPage() {
       <header className={styles.mobileTopBar}>
         <Link href="/dashboard" className={styles.mobileTopBarLogo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </Link>
         <div className={styles.mobileTopBarRight}>
           <button
@@ -174,9 +174,9 @@ export default function DashboardPage() {
         <div className={styles.sidebarTop}>
           <Link href="/" className={styles.logo}>
             <div className={styles.logoIcon}>
-              <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+              <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
             </div>
-            <span className={styles.logoText}>MemoryVault</span>
+            <span className={styles.logoText}>NimCapsule</span>
           </Link>
         </div>
 

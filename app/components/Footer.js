@@ -9,9 +9,9 @@ export default function Footer() {
         <div className={styles.top}>
           <div className={styles.brand}>
             <div className={styles.logoIcon}>
-              <img src="/logo.png" alt="MemoryVault" width={20} height={20} style={{ display: 'block' }} />
+              <img src="/logo.png" alt="NimCapsule" width={20} height={20} style={{ display: 'block' }} />
             </div>
-            <span className={styles.logoText}>MemoryVault</span>
+            <span className={styles.logoText}>NimCapsule</span>
           </div>
           <p className={styles.tagline}>
             Your memories, sealed in time.
@@ -22,7 +22,7 @@ export default function Footer() {
 
         <div className={styles.bottom}>
           <p className={styles.copy}>
-            &copy; {new Date().getFullYear()} MemoryVault. All rights reserved.
+            &copy; {new Date().getFullYear()} NimCapsule. All rights reserved.
           </p>
           <div className={styles.links}>
             <Link href="/login" className={styles.link}>Log In</Link>

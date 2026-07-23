@@ -10,7 +10,7 @@ const geist = Geist({
 });
 
 export const metadata = {
-  title: "MemoryVault — Seal Your Memories in Time",
+  title: "NimCapsule — Seal Your Memories in Time",
   description:
     "Create digital time capsules filled with messages, photos, and crypto gifts that unlock at a future date. Preserve what matters most.",
   icons: {
@@ -23,7 +23,7 @@ export const metadata = {
   },
   manifest: "/manifest.json",
   openGraph: {
-    title: "MemoryVault — Seal Your Memories in Time",
+    title: "NimCapsule — Seal Your Memories in Time",
     description:
       "Create digital time capsules filled with messages, photos, and gifts that unlock at a future date.",
     type: "website",

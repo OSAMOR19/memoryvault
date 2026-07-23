@@ -152,9 +152,9 @@ export default function ProfilePage() {
       <header className={styles.mobileTopBar}>
         <Link href="/dashboard" className={styles.mobileTopBarLogo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </Link>
         <div className={styles.mobileTopBarRight}>
           <button
@@ -367,7 +367,7 @@ export default function ProfilePage() {
           <h3 className={styles.cardLabel}>About</h3>
           <div className={styles.aboutRow}>
             <Info size={16} />
-            <span>MemoryVault v1.0.0</span>
+            <span>NimCapsule v1.0.0</span>
           </div>
           <p className={styles.aboutText}>
             Seal your memories in digital time capsules. Messages, photos, and

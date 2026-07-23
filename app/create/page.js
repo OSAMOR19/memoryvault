@@ -30,6 +30,7 @@ import {
 } from '../lib/dates';
 import { sendNimiqTransaction } from '../lib/nimiq';
 import NimiqWalletButton from '../components/NimiqWalletButton';
+import ShareLinkButton from '../components/ShareLinkButton';
 import styles from './create.module.css';
 
 const AnniversaryIcon = ({ size }) => (
@@ -66,6 +67,8 @@ export default function CreateCapsulePage() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [sealing, setSealing] = useState(false);
+  const [sealed, setSealed] = useState(false);
+  const [createdCapsuleId, setCreatedCapsuleId] = useState(null);
 
   // Step 1
   const [title, setTitle] = useState('');
@@ -151,10 +154,10 @@ export default function CreateCapsulePage() {
           if (res?.success) {
             txHash = res.txHash;
           } else if (res?.error) {
-            console.warn('[MemoryVault] Nimiq transaction notice:', res.error);
+            console.warn('[NimCapsule] Nimiq transaction notice:', res.error);
           }
         } catch (nErr) {
-          console.warn('[MemoryVault] Nimiq transaction error:', nErr);
+          console.warn('[NimCapsule] Nimiq transaction error:', nErr);
         }
       }
 
@@ -167,11 +170,13 @@ export default function CreateCapsulePage() {
         unlockDate: new Date(unlockDate).toISOString(),
       });
 
+      setCreatedCapsuleId(capsule.id);
       setTimeout(() => {
-        router.push(`/capsule/${capsule.id}`);
+        setSealing(false);
+        setSealed(true);
       }, 2200);
     } catch (err) {
-      console.error('[MemoryVault] Seal error:', err);
+      console.error('[NimCapsule] Seal error:', err);
       setSealing(false);
       setError('Failed to create capsule. Please try again.');
     }
@@ -229,6 +234,34 @@ export default function CreateCapsulePage() {
           <p className={styles.sealSubtext}>
             It will sleep until {formatLong(unlockDate)}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Capsule sealed — show share link
+  if (sealed && createdCapsuleId) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.sealOverlay}>
+          <div className={styles.sealCircle}>
+            <ShieldIcon size={140} />
+          </div>
+          <p className={styles.sealMessage}>Your capsule is sealed!</p>
+          <p className={styles.sealSubtext}>
+            It will sleep until {formatLong(unlockDate)}
+          </p>
+          <div className={styles.shareLinkSection}>
+            <p className={styles.shareLinkLabel}>Share this capsule with someone special</p>
+            <ShareLinkButton capsuleId={createdCapsuleId} variant="prominent" />
+            <button
+              className={styles.viewCapsuleButton}
+              onClick={() => router.push(`/capsule/${createdCapsuleId}`)}
+              type="button"
+            >
+              View Capsule
+            </button>
+          </div>
         </div>
       </div>
     );

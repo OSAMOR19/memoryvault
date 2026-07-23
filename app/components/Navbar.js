@@ -17,14 +17,14 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
 
     // Check auth
-    const auth = localStorage.getItem("memoryvault_auth");
+    const auth = localStorage.getItem("nimcapsule_auth");
     setIsLoggedIn(!!auth);
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("memoryvault_auth");
+    localStorage.removeItem("nimcapsule_auth");
     setIsLoggedIn(false);
     window.location.href = "/";
   };
@@ -37,9 +37,9 @@ export default function Navbar() {
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={24} height={24} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={24} height={24} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </Link>
 
         {/* Desktop nav */}

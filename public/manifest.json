@@ -1,6 +1,6 @@
 {
-  "name": "MemoryVault",
-  "short_name": "MemoryVault",
+  "name": "NimCapsule",
+  "short_name": "NimCapsule",
   "description": "Digital time capsules sealed with messages, photos, and crypto gifts.",
   "start_url": "/",
   "display": "standalone",

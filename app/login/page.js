@@ -121,11 +121,11 @@ export default function LoginPage() {
         <div className={styles.brandPanelInner}>
           <div className={styles.brandLogo}>
             <div className={styles.brandLogoIcon}>
-              <img src="/logo.png" alt="MemoryVault" width={28} height={28} style={{ display: 'block' }} />
+              <img src="/logo.png" alt="NimCapsule" width={28} height={28} style={{ display: 'block' }} />
             </div>
           </div>
 
-          <h1 className={styles.brandName}>MemoryVault</h1>
+          <h1 className={styles.brandName}>NimCapsule</h1>
           <p className={styles.brandTagline}>Your memories, sealed in time.</p>
 
           <div className={styles.brandFeatures}>
@@ -163,9 +163,9 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className={styles.mobileLogo}>
             <div className={styles.mobileLogoIcon}>
-              <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+              <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
             </div>
-            <span className={styles.mobileLogoText}>MemoryVault</span>
+            <span className={styles.mobileLogoText}>NimCapsule</span>
           </div>
 
           <div className={styles.card}>

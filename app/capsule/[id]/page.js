@@ -25,6 +25,7 @@ import {
   getPhotoUrl,
 } from '../../lib/storage';
 import { formatLong, formatMedium, getCountdown } from '../../lib/dates';
+import ShareLinkButton from '../../components/ShareLinkButton';
 import styles from './capsule.module.css';
 
 const AnniversaryIcon = ({ size }) => (
@@ -250,6 +251,7 @@ export default function CapsuleDetailPage({ params }) {
           )}
           {statusLabel}
         </div>
+        <ShareLinkButton capsuleId={capsuleId} variant="compact" className={styles.headerShareBtn} />
       </header>
 
       <div className={styles.content}>

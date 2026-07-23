@@ -1,11 +1,11 @@
 export const metadata = {
-  title: 'Reset Password — MemoryVault',
+  title: 'Reset Password — NimCapsule',
   description:
-    'Set a new password for your MemoryVault account.',
+    'Set a new password for your NimCapsule account.',
   openGraph: {
-    title: 'Reset Password — MemoryVault',
+    title: 'Reset Password — NimCapsule',
     description:
-      'Set a new password to regain access to your MemoryVault account.',
+      'Set a new password to regain access to your NimCapsule account.',
     type: 'website',
   },
 };

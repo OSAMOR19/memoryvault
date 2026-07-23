@@ -95,9 +95,9 @@ export default function ResetPasswordPage() {
         {/* Logo */}
         <div className={styles.logo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </div>
 
         <div className={styles.card}>
@@ -136,7 +136,7 @@ export default function ResetPasswordPage() {
               <div className={styles.cardHeader}>
                 <h2 className={styles.cardTitle}>Set new password</h2>
                 <p className={styles.cardSubtitle}>
-                  Choose a strong password for your MemoryVault account.
+                  Choose a strong password for your NimCapsule account.
                 </p>
               </div>
 
