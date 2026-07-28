@@ -14,6 +14,7 @@ import {
   Home,
   User,
   Plus,
+  Shield,
 } from 'lucide-react';
 import { getSession, logOut } from '../lib/auth';
 import {
@@ -22,6 +23,7 @@ import {
   markAllNotificationsAsRead,
   deleteNotification,
   getUnreadNotificationsCount,
+  isAdmin,
 } from '../lib/storage';
 import styles from './notifications.module.css';
 
@@ -189,6 +191,12 @@ export default function NotificationsPage() {
             <span>Notifications</span>
             {unreadCount > 0 && <span className={styles.navUnreadDot} />}
           </Link>
+          {isAdmin(user?.email) && (
+            <Link href="/admin" className={styles.sidebarLink}>
+              <Shield size={18} />
+              <span>Admin Panel</span>
+            </Link>
+          )}
         </nav>
 
         <div className={styles.sidebarBottom}>
@@ -303,6 +311,12 @@ export default function NotificationsPage() {
           <User size={20} />
           <span>Profile</span>
         </Link>
+        {isAdmin(user?.email) && (
+          <Link href="/admin" className={styles.bottomNavItem}>
+            <Shield size={20} />
+            <span>Admin</span>
+          </Link>
+        )}
       </nav>
     </div>
   );

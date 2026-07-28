@@ -20,9 +20,10 @@ import {
   Home,
   User,
   Bell,
+  Shield,
 } from "lucide-react";
 import { getSession, logOut } from "../lib/auth";
-import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount } from "../lib/storage";
+import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount, isAdmin } from "../lib/storage";
 import NimiqWalletButton from "../components/NimiqWalletButton";
 import styles from "./dashboard.module.css";
 
@@ -211,6 +212,12 @@ export default function DashboardPage() {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#C49710', marginLeft: 'auto' }} />
             )}
           </Link>
+          {isAdmin(user?.email) && (
+            <Link href="/admin" className={styles.sidebarLink}>
+              <Shield size={18} />
+              <span>Admin Panel</span>
+            </Link>
+          )}
         </nav>
 
         <div className={styles.sidebarBottom}>
@@ -404,6 +411,12 @@ export default function DashboardPage() {
           <User size={20} />
           <span>Profile</span>
         </Link>
+        {isAdmin(user?.email) && (
+          <Link href="/admin" className={`${styles.bottomNavItem} ${pathname === "/admin" ? styles.bottomNavItemActive : ""}`}>
+            <Shield size={20} />
+            <span>Admin</span>
+          </Link>
+        )}
       </nav>
     </div>
   );

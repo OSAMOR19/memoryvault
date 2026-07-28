@@ -245,3 +245,56 @@ CREATE POLICY "Users can delete own notifications"
 -- Index for user notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
 
+-- ── Database Function: get_admin_dashboard_data ────────────────
+CREATE OR REPLACE FUNCTION public.get_admin_dashboard_data()
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER -- runs with superuser privileges to read auth.users and bypass RLS
+AS $$
+DECLARE
+  user_email TEXT;
+  result JSON;
+BEGIN
+  -- Get the email of the calling user
+  SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
+
+  -- Verify admin authorization (adjust list as needed)
+  IF user_email IS NULL OR NOT (
+    user_email = 'isaacchukwuka67@gmail.com' OR 
+    user_email = 'cthumbs213@gmail.com' OR
+    user_email = 'jamescurtisvis@gmail.com' OR
+    -- Checks metadata or other emails defined in the settings
+    COALESCE(auth.jwt()->'user_metadata'->>'is_admin', 'false') = 'true'
+  ) THEN
+    RAISE EXCEPTION 'Access Denied: You are not authorized to view admin statistics.';
+  END IF;
+
+  -- Build the JSON response containing overall stats and user listing
+  SELECT json_build_object(
+    'stats', json_build_object(
+      'total_users', (SELECT count(*) FROM public.profiles),
+      'total_capsules', (SELECT count(*) FROM public.capsules),
+      'total_sealed', (SELECT count(*) FROM public.capsules WHERE status = 'sealed'),
+      'total_opened', (SELECT count(*) FROM public.capsules WHERE status = 'opened'),
+      'total_photos', (SELECT count(*) FROM public.capsule_photos)
+    ),
+    'users', (
+      SELECT json_agg(u) FROM (
+        SELECT 
+          p.id,
+          p.name,
+          p.email,
+          p.created_at,
+          au.last_sign_in_at,
+          (SELECT count(*) FROM public.capsules c WHERE c.user_id = p.id) as capsule_count,
+          (SELECT count(*) FROM public.capsule_photos ph JOIN public.capsules c ON ph.capsule_id = c.id WHERE c.user_id = p.id) as photo_count
+        FROM public.profiles p
+        JOIN auth.users au ON p.id = au.id
+        ORDER BY p.created_at DESC
+      ) u
+    )
+  ) INTO result;
+  
+  RETURN result;
+END;
+$$;

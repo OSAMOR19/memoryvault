@@ -48,10 +48,10 @@ export async function POST(request) {
                 <!-- Logo & Brand -->
                 <tr>
                   <td align="center" style="padding:40px 40px 20px;">
-                    <div style="background-color:#FAF8F5;width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid #F3F0EB;text-align:center;">
-                      <span style="font-size:28px;line-height:56px;display:inline-block;vertical-align:middle;">⏳</span>
+                    <div style="background-color:#FAF8F5;width:56px;height:56px;border-radius:14px;display:inline-block;border:1px solid #F3F0EB;text-align:center;">
+                      <span style="font-size:28px;line-height:56px;vertical-align:middle;">⏳</span>
                     </div>
-                    <span style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:#1A1A1A;">MemoryVault</span>
+                    <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:#1A1A1A;margin-top:12px;">MemoryVault</div>
                   </td>
                 </tr>
       
@@ -65,27 +65,36 @@ export async function POST(request) {
                   </td>
                 </tr>
       
-                <!-- Capsule details card -->
+                <!-- Capsule details card (premium layout) -->
                 <tr>
                   <td style="padding:0 40px 30px;">
-                    <table role="presentation" width="100%" style="background-color:#FAF8F5;border-radius:12px;border:1px solid #F3F0EB;padding:20px;border-collapse:collapse;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF8F5;border-left:4px solid #E9B114;border-top:1px solid #F3F0EB;border-right:1px solid #F3F0EB;border-bottom:1px solid #F3F0EB;border-radius:0 12px 12px 0;border-collapse:collapse;width:100%;">
                       <tr>
-                        <td style="padding:4px 0;font-size:12px;color:#9E9E9E;text-transform:uppercase;letter-spacing:0.5px;">Capsule Title</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:0 0 12px;font-size:16px;font-weight:600;color:#1A1A1A;">"${capsuleTitle}"</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:4px 0;font-size:12px;color:#9E9E9E;text-transform:uppercase;letter-spacing:0.5px;">Occasion</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:0 0 12px;font-size:14px;font-weight:500;color:#6B6B6B;">${formattedOccasion}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:4px 0;font-size:12px;color:#9E9E9E;text-transform:uppercase;letter-spacing:0.5px;">Unlock Date</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:4px 0 0;font-size:14px;font-weight:600;color:#E9B114;">🔑 ${formattedDate}</td>
+                        <td style="padding:24px;">
+                          <!-- Title Section -->
+                          <div style="font-size:11px;color:#9E9E9E;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;">Capsule Title</div>
+                          <div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:16px;line-height:1.3;">${capsuleTitle}</div>
+                          
+                          <div style="height:1px;background-color:#F3F0EB;margin-bottom:16px;"></div>
+                          
+                          <!-- Occasion and Unlock Date side-by-side using table -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
+                            <tr>
+                              <td width="50%" style="padding-right:10px;vertical-align:top;">
+                                <div style="font-size:11px;color:#9E9E9E;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;">Occasion</div>
+                                <div style="font-size:14px;font-weight:600;color:#6B6B6B;">
+                                  <span style="font-size:14px;vertical-align:middle;margin-right:4px;">🎉</span><span style="vertical-align:middle;">${formattedOccasion}</span>
+                                </div>
+                              </td>
+                              <td width="50%" style="padding-left:15px;vertical-align:top;border-left:1px solid #F3F0EB;">
+                                <div style="font-size:11px;color:#9E9E9E;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;">Unlocks On</div>
+                                <div style="font-size:14px;font-weight:700;color:#C49710;">
+                                  <span style="font-size:14px;vertical-align:middle;margin-right:4px;">🔑</span><span style="vertical-align:middle;">${formattedDate}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
                       </tr>
                     </table>
                   </td>
@@ -132,7 +141,7 @@ export async function POST(request) {
       console.log('--- [Resend MOCK Send Success] ---');
       console.log(`To: ${email}`);
       console.log(`From: ${fromEmail}`);
-      console.log(`Subject: 🔒 Your MemoryVault Capsule "${capsuleTitle}" has been sealed!`);
+      console.log(`Subject: MemoryVault Capsule Sealed: ${capsuleTitle}`);
       console.log('-----------------------------------');
       return NextResponse.json({
         success: true,
@@ -150,7 +159,7 @@ export async function POST(request) {
       body: JSON.stringify({
         from: fromEmail,
         to: [email],
-        subject: `🔒 Your MemoryVault Capsule "${capsuleTitle}" has been sealed!`,
+        subject: `MemoryVault Capsule Sealed: ${capsuleTitle}`,
         html: htmlContent,
       }),
     });
@@ -167,3 +176,4 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

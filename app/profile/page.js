@@ -26,7 +26,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { getSession, logOut, updateProfile, changePassword, deleteAccount } from '../lib/auth';
-import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount } from '../lib/storage';
+import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount, isAdmin } from '../lib/storage';
 import NimiqWalletButton from '../components/NimiqWalletButton';
 import styles from './profile.module.css';
 
@@ -460,6 +460,12 @@ export default function ProfilePage() {
           <User size={20} />
           <span>Profile</span>
         </Link>
+        {isAdmin(user?.email) && (
+          <Link href="/admin" className={styles.bottomNavItem}>
+            <Shield size={20} />
+            <span>Admin</span>
+          </Link>
+        )}
       </nav>
     </div>
   );
