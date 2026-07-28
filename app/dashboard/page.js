@@ -19,9 +19,10 @@ import {
   Package,
   Home,
   User,
+  Bell,
 } from "lucide-react";
 import { getSession, logOut } from "../lib/auth";
-import { getCapsules, getEffectiveStatus } from "../lib/storage";
+import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount } from "../lib/storage";
 import NimiqWalletButton from "../components/NimiqWalletButton";
 import styles from "./dashboard.module.css";
 
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -60,13 +62,26 @@ export default function DashboardPage() {
       }
       setUser(session);
       await loadCapsules();
+      await loadUnreadCount();
       setIsLoaded(true);
     })();
 
-    // Refresh every minute to update countdowns
-    const interval = setInterval(loadCapsules, 60000);
+    // Refresh every minute to update countdowns and unread counts
+    const interval = setInterval(() => {
+      loadCapsules();
+      loadUnreadCount();
+    }, 60000);
     return () => clearInterval(interval);
   }, [router]);
+
+  async function loadUnreadCount() {
+    try {
+      const count = await getUnreadNotificationsCount();
+      setUnreadCount(count);
+    } catch {
+      setUnreadCount(0);
+    }
+  }
 
   async function loadCapsules() {
     try {
@@ -188,6 +203,13 @@ export default function DashboardPage() {
           <Link href="/create" className={styles.sidebarLink}>
             <Plus size={18} />
             <span>Create New</span>
+          </Link>
+          <Link href="/notifications" className={styles.sidebarLink}>
+            <Bell size={18} />
+            <span>Notifications</span>
+            {unreadCount > 0 && (
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#C49710', marginLeft: 'auto' }} />
+            )}
           </Link>
         </nav>
 
@@ -370,6 +392,13 @@ export default function DashboardPage() {
         <Link href="/create" className={`${styles.bottomNavItem} ${pathname === "/create" ? styles.bottomNavItemActive : ""}`}>
           <Plus size={20} />
           <span>Create</span>
+        </Link>
+        <Link href="/notifications" className={`${styles.bottomNavItem} ${pathname === "/notifications" ? styles.bottomNavItemActive : ""}`}>
+          <Bell size={20} />
+          <span>Alerts</span>
+          {unreadCount > 0 && (
+            <div style={{ position: 'absolute', top: '10px', right: '32%', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#C49710' }} />
+          )}
         </Link>
         <Link href="/profile" className={`${styles.bottomNavItem} ${pathname === "/profile" ? styles.bottomNavItemActive : ""}`}>
           <User size={20} />

@@ -23,9 +23,10 @@ import {
   Home,
   Plus,
   Info,
+  Bell,
 } from 'lucide-react';
 import { getSession, logOut, updateProfile, changePassword, deleteAccount } from '../lib/auth';
-import { getCapsules, getEffectiveStatus } from '../lib/storage';
+import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount } from '../lib/storage';
 import NimiqWalletButton from '../components/NimiqWalletButton';
 import styles from './profile.module.css';
 
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [stats, setStats] = useState({ total: 0, sealed: 0, opened: 0, ready: 0, photos: 0 });
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Edit name
   const [editingName, setEditingName] = useState(false);
@@ -67,6 +69,14 @@ export default function ProfilePage() {
 
       setUser(session);
       setNewName(session.name || '');
+
+      // Load unread count
+      try {
+        const count = await getUnreadNotificationsCount();
+        setUnreadCount(count);
+      } catch {
+        setUnreadCount(0);
+      }
 
       // Load stats from capsules
       try {
@@ -438,6 +448,13 @@ export default function ProfilePage() {
         <Link href="/create" className={styles.bottomNavItem}>
           <Plus size={20} />
           <span>Create</span>
+        </Link>
+        <Link href="/notifications" className={styles.bottomNavItem}>
+          <Bell size={20} />
+          <span>Alerts</span>
+          {unreadCount > 0 && (
+            <div style={{ position: 'absolute', top: '10px', right: '32%', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#C49710' }} />
+          )}
         </Link>
         <Link href="/profile" className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
           <User size={20} />

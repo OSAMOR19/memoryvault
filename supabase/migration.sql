@@ -206,3 +206,42 @@ WHERE NOT EXISTS (
   SELECT 1 FROM storage.policies
   WHERE name = 'Users can delete own photos' AND bucket_id = 'capsule-photos'
 );
+
+-- ── Table 4: notifications ────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL, -- e.g., 'created', 'opened', 'deleted'
+  capsule_id UUID REFERENCES public.capsules(id) ON DELETE SET NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+CREATE POLICY "Users can view own notifications"
+  ON public.notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own notifications" ON public.notifications;
+CREATE POLICY "Users can insert own notifications"
+  ON public.notifications FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+CREATE POLICY "Users can update own notifications"
+  ON public.notifications FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own notifications" ON public.notifications;
+CREATE POLICY "Users can delete own notifications"
+  ON public.notifications FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Index for user notifications
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+

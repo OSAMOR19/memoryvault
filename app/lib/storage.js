@@ -75,6 +75,36 @@ export async function addCapsule(capsuleData) {
     await uploadPhotos(capsule.id, session.user.id, capsuleData.photos);
   }
 
+  // 1. Insert notification in DB
+  try {
+    await supabase.from('notifications').insert({
+      user_id: session.user.id,
+      title: 'Capsule Sealed',
+      message: `Your time capsule "${capsule.title}" has been successfully created and sealed.`,
+      type: 'created',
+      capsule_id: capsule.id,
+    });
+  } catch (nErr) {
+    console.error('[NimCapsule] Failed to save creation notification:', nErr);
+  }
+
+  // 2. Trigger email send via API Route
+  try {
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: session.user.email,
+        name: session.user.user_metadata?.name || 'MemoryVault User',
+        capsuleTitle: capsule.title,
+        unlockDate: capsule.unlock_date,
+        occasion: capsule.occasion,
+      }),
+    }).catch(err => console.error('[NimCapsule] Background email sending failed:', err));
+  } catch (eErr) {
+    console.error('[NimCapsule] Failed to dispatch email notification:', eErr);
+  }
+
   // Return in app format
   return transformCapsule({
     ...capsule,
@@ -100,6 +130,25 @@ export async function updateCapsule(id, updates) {
     .single();
 
   if (error || !data) return null;
+
+  // Insert notification when capsule is opened
+  if (updates.status === 'opened') {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.from('notifications').insert({
+          user_id: session.user.id,
+          title: 'Capsule Opened',
+          message: `You successfully opened and viewed your time capsule "${data.title}".`,
+          type: 'opened',
+          capsule_id: data.id,
+        });
+      }
+    } catch (nErr) {
+      console.error('[NimCapsule] Failed to save opening notification:', nErr);
+    }
+  }
+
   return transformCapsule(data);
 }
 
@@ -107,6 +156,13 @@ export async function updateCapsule(id, updates) {
  * Delete a capsule by ID.
  */
 export async function deleteCapsule(id) {
+  // Get title first before deleting
+  const { data: capsule } = await supabase
+    .from('capsules')
+    .select('title')
+    .eq('id', id)
+    .single();
+
   // Photos will cascade delete from the table,
   // but we also need to clean up storage
   const { data: photos } = await supabase
@@ -120,6 +176,118 @@ export async function deleteCapsule(id) {
   }
 
   await supabase.from('capsules').delete().eq('id', id);
+
+  // Insert deletion notification
+  if (capsule) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.from('notifications').insert({
+          user_id: session.user.id,
+          title: 'Capsule Deleted',
+          message: `The time capsule "${capsule.title}" was permanently deleted from your vault.`,
+          type: 'deleted',
+          capsule_id: null,
+        });
+      }
+    } catch (nErr) {
+      console.error('[NimCapsule] Failed to save deletion notification:', nErr);
+    }
+  }
+}
+
+// ── Notifications CRUD ─────────────────────────────────────
+
+/**
+ * Get all notifications for the current user.
+ */
+export async function getNotifications() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[NimCapsule] getNotifications error:', error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Mark a notification as read.
+ */
+export async function markNotificationAsRead(id) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', id);
+
+  if (error) {
+    console.error('[NimCapsule] markNotificationAsRead error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Mark all notifications as read for the current user.
+ */
+export async function markAllNotificationsAsRead() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return false;
+
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', session.user.id);
+
+  if (error) {
+    console.error('[NimCapsule] markAllNotificationsAsRead error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Delete a notification.
+ */
+export async function deleteNotification(id) {
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('[NimCapsule] deleteNotification error:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Get count of unread notifications for the current user.
+ */
+export async function getUnreadNotificationsCount() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return 0;
+
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', session.user.id)
+    .eq('is_read', false);
+
+  if (error) {
+    console.error('[NimCapsule] getUnreadNotificationsCount error:', error.message);
+    return 0;
+  }
+  return count || 0;
 }
 
 // ── Photo Uploads ─────────────────────────────────────────
