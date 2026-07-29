@@ -1,5 +1,5 @@
 -- ============================================================
--- MemoryVault — Supabase Database Migration
+-- NimCapsule — Supabase Database Migration
 -- Run this in Supabase → SQL Editor (paste the entire file)
 -- ============================================================
 

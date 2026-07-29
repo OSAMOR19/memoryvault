@@ -593,4 +593,44 @@
     width: 100%;
     justify-content: space-between;
   }
+
+  /* Responsive Notification Cards */
+  .card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .cardIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .cardMeta {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .card {
+    flex-wrap: wrap;
+  }
+
+  .cardBody {
+    min-width: 160px;
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: flex-end;
+    border-top: 1px solid #FAF8F5;
+    padding-top: 8px;
+    margin-top: 6px;
+    align-self: flex-end;
+  }
 }

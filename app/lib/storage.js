@@ -95,7 +95,7 @@ export async function addCapsule(capsuleData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: session.user.email,
-        name: session.user.user_metadata?.name || 'MemoryVault User',
+        name: session.user.user_metadata?.name || 'NimCapsule User',
         capsuleTitle: capsule.title,
         unlockDate: capsule.unlock_date,
         occasion: capsule.occasion,

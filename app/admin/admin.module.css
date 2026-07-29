@@ -473,6 +473,10 @@
     margin-bottom: 24px;
   }
 
+  .title {
+    font-size: 1.375rem;
+  }
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
@@ -480,5 +484,37 @@
 
   .searchWrap {
     max-width: 100%;
+  }
+
+  /* Stats Grid 2x2 on Mobile */
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .statsCard {
+    padding: 14px;
+    gap: 4px;
+  }
+
+  .statsLabel {
+    font-size: 0.6875rem;
+  }
+
+  .statsValue {
+    font-size: 1.25rem;
+  }
+
+  /* Compact Table for Mobile */
+  .th:nth-child(2),
+  .td:nth-child(2),
+  .th:nth-child(5),
+  .td:nth-child(5) {
+    display: none;
+  }
+
+  .th, .td {
+    padding: 12px 14px;
   }
 }

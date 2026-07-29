@@ -147,9 +147,9 @@ export default function AdminPage() {
       <header className={styles.mobileTopBar}>
         <Link href="/dashboard" className={styles.mobileTopBarLogo}>
           <div className={styles.logoIcon}>
-            <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+            <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
           </div>
-          <span className={styles.logoText}>MemoryVault</span>
+          <span className={styles.logoText}>NimCapsule</span>
         </Link>
         <div className={styles.mobileTopBarRight}>
           <button
@@ -184,9 +184,9 @@ export default function AdminPage() {
         <div className={styles.sidebarTop}>
           <Link href="/" className={styles.logo}>
             <div className={styles.logoIcon}>
-              <img src="/logo.png" alt="MemoryVault" width={22} height={22} style={{ display: 'block' }} />
+              <img src="/logo.png" alt="NimCapsule" width={22} height={22} style={{ display: 'block' }} />
             </div>
-            <span className={styles.logoText}>MemoryVault</span>
+            <span className={styles.logoText}>NimCapsule</span>
           </Link>
         </div>
 
@@ -222,7 +222,7 @@ export default function AdminPage() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Admin Control Center</h1>
-            <p className={styles.subtitle}>MemoryVault platform overview and statistics</p>
+            <p className={styles.subtitle}>NimCapsule platform overview and statistics</p>
           </div>
           <Link href="/dashboard" className={styles.errorCta} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '10px 20px' }}>
             <ArrowLeft size={16} />
