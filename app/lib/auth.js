@@ -6,6 +6,15 @@
 
 import { supabase } from './supabase';
 
+function ensureSupabase() {
+  if (!supabase) {
+    throw new Error(
+      'Supabase is not configured. Please check that NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your environment variables.'
+    );
+  }
+  return supabase;
+}
+
 // ── Validation helpers (unchanged) ────────────────────────
 
 export function validateEmail(email) {
@@ -42,7 +51,7 @@ export async function signUp({ name, email, password }) {
   const passwordError = validatePassword(password);
   if (passwordError) return { success: false, error: passwordError };
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await ensureSupabase().auth.signUp({
     email: email.toLowerCase().trim(),
     password,
     options: {
@@ -102,7 +111,7 @@ export async function loginWithNimiqWallet(identity) {
   const nimiqName = identity.type === 'account' ? `Nimiq (${identity.address.slice(0, 10)}...)` : 'Nimiq Wallet User';
 
   // 1. Try signing in if user account already exists
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error: signInError } = await ensureSupabase().auth.signInWithPassword({
     email: nimiqEmail,
     password: nimiqPassword,
   });
@@ -121,7 +130,7 @@ export async function loginWithNimiqWallet(identity) {
   }
 
   // 2. If user doesn't exist, auto-signup
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  const { data: signUpData, error: signUpError } = await ensureSupabase().auth.signUp({
     email: nimiqEmail,
     password: nimiqPassword,
     options: {
@@ -131,7 +140,7 @@ export async function loginWithNimiqWallet(identity) {
 
   if (signUpError) {
     // If user already exists or email rate limit hit, retry signing in
-    const { data: retryData } = await supabase.auth.signInWithPassword({
+    const { data: retryData } = await ensureSupabase().auth.signInWithPassword({
       email: nimiqEmail,
       password: nimiqPassword,
     });
@@ -152,7 +161,7 @@ export async function loginWithNimiqWallet(identity) {
     // Fallback to anonymous auth if rate limit persists
     if (signUpError.message.includes('rate limit') || signUpError.message.includes('rate')) {
       try {
-        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously({
+        const { data: anonData, error: anonError } = await ensureSupabase().auth.signInAnonymously({
           options: { data: { name: nimiqName } },
         });
         if (anonData?.session && anonData?.user) {
@@ -204,7 +213,7 @@ export async function loginWithNimiqWallet(identity) {
 // ── Google OAuth ──────────────────────────────────────────
 
 export async function signInWithGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { error } = await ensureSupabase().auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/dashboard`,
@@ -221,7 +230,7 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithGoogleIdToken(idToken) {
-  const { data, error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await ensureSupabase().auth.signInWithIdToken({
     provider: 'google',
     token: idToken,
   });
@@ -241,7 +250,7 @@ export async function logIn({ email, password, remember = false }) {
 
   if (!password) return { success: false, error: 'Password is required' };
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await ensureSupabase().auth.signInWithPassword({
     email: email.toLowerCase().trim(),
     password,
   });
@@ -276,7 +285,7 @@ export async function logIn({ email, password, remember = false }) {
 // ── Session ───────────────────────────────────────────────
 
 export async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) return null;
 
   const profile = await getProfile(session.user.id);
@@ -290,20 +299,20 @@ export async function getSession() {
 }
 
 export async function isAuthenticated() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   return session !== null;
 }
 
 // ── Log Out ───────────────────────────────────────────────
 
 export async function logOut() {
-  await supabase.auth.signOut();
+  await ensureSupabase().auth.signOut();
 }
 
 // ── Profile helpers ───────────────────────────────────────
 
 export async function getProfile(userId) {
-  const { data } = await supabase
+  const { data } = await ensureSupabase()
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -312,7 +321,7 @@ export async function getProfile(userId) {
 }
 
 export async function updateProfile(userId, updates) {
-  const { data, error } = await supabase
+  const { data, error } = await ensureSupabase()
     .from('profiles')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', userId)
@@ -329,7 +338,7 @@ export async function changePassword(newPassword) {
   const pwError = validatePassword(newPassword);
   if (pwError) return { success: false, error: pwError };
 
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  const { error } = await ensureSupabase().auth.updateUser({ password: newPassword });
 
   if (error) return { success: false, error: error.message };
   return { success: true };
@@ -341,7 +350,7 @@ export async function requestPasswordReset(email) {
   const emailError = validateEmail(email);
   if (emailError) return { success: false, error: emailError };
 
-  const { error } = await supabase.auth.resetPasswordForEmail(
+  const { error } = await ensureSupabase().auth.resetPasswordForEmail(
     email.toLowerCase().trim(),
     {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -359,11 +368,11 @@ export async function requestPasswordReset(email) {
 // service_role key. For now we sign out and delete profile data.
 export async function deleteAccount(userId) {
   // Delete user's capsules (cascade will handle photos)
-  await supabase.from('capsules').delete().eq('user_id', userId);
+  await ensureSupabase().from('capsules').delete().eq('user_id', userId);
   // Delete profile
-  await supabase.from('profiles').delete().eq('id', userId);
+  await ensureSupabase().from('profiles').delete().eq('id', userId);
   // Sign out
-  await supabase.auth.signOut();
+  await ensureSupabase().auth.signOut();
   return { success: true };
 }
 

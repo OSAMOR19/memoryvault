@@ -3,7 +3,7 @@
  *
  * Singleton client for interacting with Supabase.
  * Requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
- * to be set in .env.local.
+ * to be set in .env.local (or Vercel environment variables for production).
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -12,17 +12,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    '[NimCapsule] Supabase credentials missing. ' +
-    'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
+  console.error(
+    '[NimCapsule] Supabase credentials missing! ' +
+    'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local ' +
+    'AND in your Vercel project environment variables.'
   );
 }
 
-const isValidSupabaseUrl = (url) => {
-  return typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
-};
-
-export const supabase = isValidSupabaseUrl(supabaseUrl) && supabaseAnonKey
+export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,

@@ -6,13 +6,22 @@
 
 import { supabase } from './supabase';
 
+function ensureSupabase() {
+  if (!supabase) {
+    throw new Error(
+      'Supabase is not configured. Please check that NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your environment variables.'
+    );
+  }
+  return supabase;
+}
+
 // ── Capsule CRUD ──────────────────────────────────────────
 
 /**
  * Get all capsules for the current user.
  */
 export async function getCapsules() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) return [];
 
   const { data, error } = await supabase
@@ -48,7 +57,7 @@ export async function getCapsule(id) {
  * Create a new capsule.
  */
 export async function addCapsule(capsuleData) {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
   // Insert capsule row
@@ -77,7 +86,7 @@ export async function addCapsule(capsuleData) {
 
   // 1. Insert notification in DB
   try {
-    await supabase.from('notifications').insert({
+    await ensureSupabase().from('notifications').insert({
       user_id: session.user.id,
       title: 'Capsule Sealed',
       message: `Your time capsule "${capsule.title}" has been successfully created and sealed.`,
@@ -134,9 +143,9 @@ export async function updateCapsule(id, updates) {
   // Insert notification when capsule is opened
   if (updates.status === 'opened') {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await ensureSupabase().auth.getSession();
       if (session) {
-        await supabase.from('notifications').insert({
+        await ensureSupabase().from('notifications').insert({
           user_id: session.user.id,
           title: 'Capsule Opened',
           message: `You successfully opened and viewed your time capsule "${data.title}".`,
@@ -172,17 +181,17 @@ export async function deleteCapsule(id) {
 
   if (photos && photos.length > 0) {
     const paths = photos.map(p => p.storage_path);
-    await supabase.storage.from('capsule-photos').remove(paths);
+    await ensureSupabase().storage.from('capsule-photos').remove(paths);
   }
 
-  await supabase.from('capsules').delete().eq('id', id);
+  await ensureSupabase().from('capsules').delete().eq('id', id);
 
   // Insert deletion notification
   if (capsule) {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await ensureSupabase().auth.getSession();
       if (session) {
-        await supabase.from('notifications').insert({
+        await ensureSupabase().from('notifications').insert({
           user_id: session.user.id,
           title: 'Capsule Deleted',
           message: `The time capsule "${capsule.title}" was permanently deleted from your vault.`,
@@ -202,7 +211,7 @@ export async function deleteCapsule(id) {
  * Get all notifications for the current user.
  */
 export async function getNotifications() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) return [];
 
   const { data, error } = await supabase
@@ -239,7 +248,7 @@ export async function markNotificationAsRead(id) {
  * Mark all notifications as read for the current user.
  */
 export async function markAllNotificationsAsRead() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) return false;
 
   const { error } = await supabase
@@ -274,7 +283,7 @@ export async function deleteNotification(id) {
  * Get count of unread notifications for the current user.
  */
 export async function getUnreadNotificationsCount() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) return 0;
 
   const { count, error } = await supabase
@@ -302,7 +311,7 @@ async function uploadPhotos(capsuleId, userId, photoDataUrls) {
       const ext = blob.type.split('/')[1] || 'jpg';
       const path = `${userId}/${capsuleId}/${Date.now()}_${i}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await ensureSupabase().storage
         .from('capsule-photos')
         .upload(path, blob, { contentType: blob.type });
 
@@ -312,7 +321,7 @@ async function uploadPhotos(capsuleId, userId, photoDataUrls) {
       }
 
       // Insert photo record
-      await supabase.from('capsule_photos').insert({
+      await ensureSupabase().from('capsule_photos').insert({
         capsule_id: capsuleId,
         storage_path: path,
         display_order: i,
@@ -327,7 +336,7 @@ async function uploadPhotos(capsuleId, userId, photoDataUrls) {
  * Get a public/signed URL for a stored photo.
  */
 export function getPhotoUrl(storagePath) {
-  const { data } = supabase.storage
+  const { data } = ensureSupabase().storage
     .from('capsule-photos')
     .getPublicUrl(storagePath);
   return data?.publicUrl || '';
@@ -396,7 +405,7 @@ export function isAdmin(email) {
  * Fetch all admin stats and users list.
  */
 export async function getAdminDashboardData() {
-  const { data, error } = await supabase.rpc('get_admin_dashboard_data');
+  const { data, error } = await ensureSupabase().rpc('get_admin_dashboard_data');
   if (error) {
     console.error('[NimCapsule] getAdminDashboardData error:', error.message);
     throw new Error(error.message);
