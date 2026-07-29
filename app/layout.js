@@ -2,7 +2,6 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import StorageCleaner from "./components/StorageCleaner";
 import Web3Provider from "./components/Web3Provider";
-import Script from "next/script";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -45,7 +44,6 @@ export default function RootLayout({ children }) {
           <StorageCleaner />
           {children}
         </Web3Provider>
-        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
       </body>
     </html>
   );
