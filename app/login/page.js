@@ -15,6 +15,9 @@ import {
   AlertCircle,
   ArrowRight,
   Vault,
+  Sparkles,
+  Package,
+  Shield,
 } from 'lucide-react';
 import { logIn, signInWithGoogle, signInWithGoogleIdToken, getRememberedEmail, isAuthenticated, loginWithNimiqWallet } from '../lib/auth';
 import { getNimiqAuthIdentity, isNimiqHost } from '../lib/nimiq';
@@ -30,6 +33,54 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slides = [
+    {
+      title: "Time-Locked Capsules",
+      description: "Seal messages, photos, and letters in a digital vault. They stay securely locked until your exact chosen unlock date.",
+      illustration: (
+        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(233, 177, 20, 0.1)', animation: 'pulseGlow 2s infinite ease-in-out' }} />
+          <div style={{ position: 'absolute', width: '80%', height: '80%', borderRadius: '50%', background: 'rgba(233, 177, 20, 0.15)' }} />
+          <Lock size={48} style={{ color: '#E9B114', zIndex: 1 }} />
+        </div>
+      )
+    },
+    {
+      title: "Schedule for Any Occasion",
+      description: "Deliver memories for birthdays, graduations, anniversaries, or wedding days. The perfect surprise for the future.",
+      illustration: (
+        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(233, 177, 20, 0.08)' }} />
+          <div style={{ position: 'absolute', width: '80%', height: '80%', border: '2px dashed rgba(233, 177, 20, 0.4)', borderRadius: '50%', animation: 'rotateClock 20s linear infinite' }} />
+          <Clock size={48} style={{ color: '#E9B114', zIndex: 1 }} />
+        </div>
+      )
+    },
+    {
+      title: "Attach NIM Crypto Gifts",
+      description: "Add NIM cryptocurrency to your capsules. The recipient receives the crypto automatically when the capsule opens.",
+      illustration: (
+        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(233, 177, 20, 0.1)' }} />
+          <div style={{ animation: 'floatCoin 3s ease-in-out infinite', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#E9B114" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="56" height="56">
+              <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" />
+              <path d="M12 6L6 9.5v5l6 3.5 6-3.5v-5z" opacity="0.6" />
+            </svg>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  useEffect(() => {
+    const slideInterval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 4500);
+    return () => clearInterval(slideInterval);
+  }, [slides.length]);
 
   useEffect(() => {
     // Redirect if already logged in
@@ -165,47 +216,48 @@ export default function LoginPage() {
     <div className={styles.page}>
       {/* ── Left Branding Panel ── */}
       <aside className={styles.brandPanel}>
-        <div className={styles.decorativeIcons}>
-          <img src="/Sealed.svg" alt="Lock" className={`${styles.decorIcon} ${styles.decorIcon1}`} width={48} height={48} style={{ display: 'block' }} />
-          <Clock size={40} className={`${styles.decorIcon} ${styles.decorIcon2}`} />
-          <Gift size={36} className={`${styles.decorIcon} ${styles.decorIcon3}`} />
-          <img src="/Sheba.svg" alt="Love" className={`${styles.decorIcon} ${styles.decorIcon4}`} width={44} height={44} style={{ display: 'block' }} />
-        </div>
-
-        <div className={styles.brandPanelInner}>
-          <div className={styles.brandLogo}>
-            <div className={styles.brandLogoIcon}>
-              <img src="/logo.png" alt="NimCapsule" width={28} height={28} style={{ display: 'block' }} />
+        <div className={styles.brandPanelInner} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
+          <div className={styles.brandLogo} style={{ width: '96px', height: '96px', marginBottom: '24px', justifyContent: 'center' }}>
+            <div className={styles.brandLogoIcon} style={{ width: '96px', height: '96px', borderRadius: '24px' }}>
+              <img src="/logo.png" alt="NimCapsule" width={96} height={96} style={{ display: 'block' }} />
             </div>
           </div>
 
-          <h1 className={styles.brandName}>NimCapsule</h1>
-          <p className={styles.brandTagline}>Your memories, sealed in time.</p>
+          <h1 className={styles.brandName} style={{ textAlign: 'center', fontSize: '38px', marginBottom: '8px', width: '100%' }}>NimCapsule</h1>
+          <p className={styles.brandTagline} style={{ textAlign: 'center', fontSize: '18px', color: '#6B6B6B', marginBottom: '40px', width: '100%', fontStyle: 'normal' }}>Your memories, sealed in time.</p>
 
-          <div className={styles.brandFeatures}>
-            <div className={styles.brandFeature}>
-              <div className={styles.brandFeatureIcon}>
-                <Lock size={18} />
-              </div>
-              <span className={styles.brandFeatureText}>
-                Encrypted time capsules only you can unlock
-              </span>
+          {/* Carousel */}
+          <div style={{ width: '100%', maxWidth: '380px', marginTop: '20px' }}>
+            <div style={{ minHeight: '280px', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }} key={activeSlide}>
+              {slides[activeSlide].illustration}
+              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1A1A1A', marginBottom: '12px' }}>
+                {slides[activeSlide].title}
+              </h2>
+              <p style={{ fontSize: '15px', color: '#6B6B6B', lineHeight: '1.6', margin: '0' }}>
+                {slides[activeSlide].description}
+              </p>
             </div>
-            <div className={styles.brandFeature}>
-              <div className={styles.brandFeatureIcon}>
-                <Clock size={18} />
-              </div>
-              <span className={styles.brandFeatureText}>
-                Schedule memories to open on any future date
-              </span>
-            </div>
-            <div className={styles.brandFeature}>
-              <div className={styles.brandFeatureIcon}>
-                <Gift size={18} />
-              </div>
-              <span className={styles.brandFeatureText}>
-                Attach photos, letters, and digital gifts
-              </span>
+
+            {/* Dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveSlide(idx)}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: activeSlide === idx ? '#E9B114' : 'rgba(233, 177, 20, 0.25)',
+                    cursor: 'pointer',
+                    padding: '0',
+                    transition: 'background 0.3s ease'
+                  }}
+                  type="button"
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -239,7 +291,9 @@ export default function LoginPage() {
                 style={{ background: 'linear-gradient(135deg, #E9B114, #C49710)', color: '#FFF', fontWeight: 600, border: 'none', marginBottom: '8px' }}
               >
                 <span className={styles.socialIcon}>
-                  <img src="/Sheba.svg" alt="Nimiq" width={20} height={20} style={{ display: 'block' }} />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ display: 'block' }}>
+                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" />
+                  </svg>
                 </span>
                 Continue with Nimiq Wallet
               </button>

@@ -1,20 +1,6 @@
-import Navbar from "./components/Navbar";
-import HeroSection from "./components/HeroSection";
-import FeaturesSection from "./components/FeaturesSection";
-import HowItWorks from "./components/HowItWorks";
-import Footer from "./components/Footer";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <>
-      <Navbar />
-      <main>
-        <HeroSection />
-        <FeaturesSection />
-        <HowItWorks />
-      </main>
-      <Footer />
-    </>
-  );
+  redirect("/login");
 }
 

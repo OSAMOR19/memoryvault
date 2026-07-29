@@ -34,11 +34,11 @@ import ShareLinkButton from '../components/ShareLinkButton';
 import styles from './create.module.css';
 
 const AnniversaryIcon = ({ size }) => (
-  <img src="/Sheba.svg" alt="Anniversary" width={size} height={size} style={{ display: 'block' }} />
+  <Heart size={size} style={{ display: 'block' }} />
 );
 
 const ShieldIcon = ({ size }) => (
-  <img src="/Sealed.svg" alt="Private & Secure" width={size} height={size} style={{ display: 'block' }} />
+  <Shield size={size} style={{ display: 'block' }} />
 );
 
 const OCCASIONS = [

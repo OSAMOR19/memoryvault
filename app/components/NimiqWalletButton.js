@@ -76,7 +76,9 @@ export default function NimiqWalletButton({ className = '' }) {
           onClick={() => setDropdownOpen(!dropdownOpen)}
           type="button"
         >
-          <img src="/Sheba.svg" alt="Nimiq" width={18} height={18} className={styles.nimiqLogo} />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.nimiqLogo} style={{ width: '18px', height: '18px', display: 'inline-block' }}>
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" />
+          </svg>
           <span className={styles.addressText}>{formatAddress(address)}</span>
           <ChevronDown size={14} className={styles.chevron} />
         </button>
@@ -105,7 +107,9 @@ export default function NimiqWalletButton({ className = '' }) {
       disabled={loading}
       type="button"
     >
-      <img src="/Sheba.svg" alt="Nimiq" width={18} height={18} className={styles.nimiqLogo} />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.nimiqLogo} style={{ width: '18px', height: '18px', display: 'inline-block' }}>
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" />
+      </svg>
       <span>{loading ? 'Connecting...' : 'Connect Nimiq Wallet'}</span>
     </button>
   );

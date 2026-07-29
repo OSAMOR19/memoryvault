@@ -29,7 +29,7 @@ import ShareLinkButton from '../../components/ShareLinkButton';
 import styles from './capsule.module.css';
 
 const AnniversaryIcon = ({ size }) => (
-  <img src="/Sheba.svg" alt="Anniversary" width={size} height={size} style={{ display: 'block' }} />
+  <Heart size={size} style={{ display: 'block' }} />
 );
 
 const OCCASION_ICONS = {
