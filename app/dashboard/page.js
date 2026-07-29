@@ -25,6 +25,7 @@ import {
 import { getSession, logOut } from "../lib/auth";
 import { getCapsules, getEffectiveStatus, getUnreadNotificationsCount, isAdmin } from "../lib/storage";
 import NimiqWalletButton from "../components/NimiqWalletButton";
+import { supabase } from "../lib/supabase";
 import styles from "./dashboard.module.css";
 
 const OCCASION_ICONS = {
@@ -55,7 +56,55 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   useEffect(() => {
+    let active = true;
+
     (async () => {
+      // 1. Check if we have a PKCE code in the URL.
+      // If we do, we want to wait for the client-side SDK to finish the exchange.
+      const hasCode = typeof window !== 'undefined' && window.location.search.includes('code=');
+      
+      if (hasCode && supabase) {
+        // Let's listen to auth state changes until we get a SIGNED_IN event or timeout
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (!active) return;
+          if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+            const userSession = {
+              id: session.user.id,
+              name: session.user.user_metadata?.name || '',
+              email: session.user.email,
+              createdAt: session.user.created_at,
+            };
+            setUser(userSession);
+            await loadCapsules();
+            await loadUnreadCount();
+            setIsLoaded(true);
+            
+            // Clean up the URL by removing the ?code=... query parameter
+            if (typeof window !== 'undefined') {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            subscription.unsubscribe();
+          }
+        });
+
+        // Set a timeout of 5 seconds. If we still don't have a session by then, redirect to login.
+        setTimeout(async () => {
+          if (!active) return;
+          const session = await getSession();
+          if (!session) {
+            router.push("/login");
+          } else {
+            setUser(session);
+            await loadCapsules();
+            await loadUnreadCount();
+            setIsLoaded(true);
+          }
+          subscription.unsubscribe();
+        }, 5000);
+
+        return;
+      }
+
       const session = await getSession();
       if (!session) {
         router.push("/login");
@@ -72,7 +121,10 @@ export default function DashboardPage() {
       loadCapsules();
       loadUnreadCount();
     }, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [router]);
 
   async function loadUnreadCount() {
