@@ -18,7 +18,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey
+const isValidSupabaseUrl = (url) => {
+  return typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
+};
+
+export const supabase = isValidSupabaseUrl(supabaseUrl) && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
