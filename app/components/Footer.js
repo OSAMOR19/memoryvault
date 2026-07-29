@@ -25,6 +25,8 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} NimCapsule. All rights reserved.
           </p>
           <div className={styles.links}>
+            <Link href="/privacy" className={styles.link}>Privacy Policy</Link>
+            <Link href="/terms" className={styles.link}>Terms of Service</Link>
             <Link href="/login" className={styles.link}>Log In</Link>
             <Link href="/signup" className={styles.link}>Sign Up</Link>
           </div>
