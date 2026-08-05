@@ -88,7 +88,7 @@ ALTER TABLE public.capsules ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own capsules" ON public.capsules;
 CREATE POLICY "Users can view own capsules"
   ON public.capsules FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id OR now() >= unlock_date);
 
 DROP POLICY IF EXISTS "Users can insert own capsules" ON public.capsules;
 CREATE POLICY "Users can insert own capsules"
@@ -98,7 +98,7 @@ CREATE POLICY "Users can insert own capsules"
 DROP POLICY IF EXISTS "Users can update own capsules" ON public.capsules;
 CREATE POLICY "Users can update own capsules"
   ON public.capsules FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id OR now() >= unlock_date);
 
 DROP POLICY IF EXISTS "Users can delete own capsules" ON public.capsules;
 CREATE POLICY "Users can delete own capsules"
@@ -128,7 +128,7 @@ CREATE POLICY "Users can view own capsule photos"
     EXISTS (
       SELECT 1 FROM public.capsules
       WHERE capsules.id = capsule_photos.capsule_id
-        AND capsules.user_id = auth.uid()
+        AND (capsules.user_id = auth.uid() OR now() >= capsules.unlock_date)
     )
   );
 
@@ -230,7 +230,17 @@ CREATE POLICY "Users can view own notifications"
 DROP POLICY IF EXISTS "Users can insert own notifications" ON public.notifications;
 CREATE POLICY "Users can insert own notifications"
   ON public.notifications FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (
+    auth.uid() = user_id
+    OR (
+      type = 'opened'
+      AND EXISTS (
+        SELECT 1 FROM public.capsules
+        WHERE capsules.id = notifications.capsule_id
+          AND capsules.user_id = notifications.user_id
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 CREATE POLICY "Users can update own notifications"

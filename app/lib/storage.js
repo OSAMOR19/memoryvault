@@ -143,12 +143,22 @@ export async function updateCapsule(id, updates) {
   // Insert notification when capsule is opened
   if (updates.status === 'opened') {
     try {
+      // 1. Notify the owner
+      await ensureSupabase().from('notifications').insert({
+        user_id: data.user_id,
+        title: 'Capsule Opened',
+        message: `Your time capsule "${data.title}" has been successfully opened.`,
+        type: 'opened',
+        capsule_id: data.id,
+      });
+
+      // 2. Notify the recipient (if logged in and not the owner)
       const { data: { session } } = await ensureSupabase().auth.getSession();
-      if (session) {
+      if (session && session.user.id !== data.user_id) {
         await ensureSupabase().from('notifications').insert({
           user_id: session.user.id,
           title: 'Capsule Opened',
-          message: `You successfully opened and viewed your time capsule "${data.title}".`,
+          message: `You successfully opened the time capsule "${data.title}".`,
           type: 'opened',
           capsule_id: data.id,
         });
