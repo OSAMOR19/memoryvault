@@ -538,6 +538,202 @@
   margin-left: 4px;
 }
 
+/* ── Claim Button ── */
+.claimSection {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.claimButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 40px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #E9B114, #C49710);
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  animation: claimPulse 2.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.claimButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: claimShimmer 3s ease-in-out infinite;
+}
+
+.claimButton:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(233, 177, 20, 0.4);
+}
+
+.claimButton:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(233, 177, 20, 0.3);
+}
+
+.claimButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+  animation: none;
+}
+
+.claimSpinner {
+  animation: spin 1s linear infinite;
+}
+
+.claimHint {
+  font-size: 12px;
+  color: #9E9E9E;
+  font-weight: 500;
+  text-align: center;
+}
+
+.claimError {
+  font-size: 13px;
+  color: #D32F2F;
+  font-weight: 500;
+  text-align: center;
+  padding: 8px 16px;
+  background: rgba(211, 47, 47, 0.06);
+  border-radius: 8px;
+  max-width: 320px;
+}
+
+/* ── Claimed Badge ── */
+.claimedSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: fadeInUp 0.4s ease;
+}
+
+.claimedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 24px;
+  background: rgba(79, 109, 90, 0.1);
+  color: #4F6D5A;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.claimedDetails {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.claimedAddress {
+  font-size: 12px;
+  color: #9E9E9E;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 0.3px;
+}
+
+.claimedDate {
+  font-size: 11px;
+  color: #BDBDBD;
+  font-weight: 500;
+}
+
+/* ── Claim Success ── */
+.claimSuccessSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: claimSuccessReveal 0.5s ease;
+}
+
+.claimSuccessIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F6D5A, #3D5645);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  animation: claimSuccessBounce 0.6s ease 0.1s;
+}
+
+.claimSuccessText {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4F6D5A;
+  letter-spacing: -0.2px;
+}
+
+/* ── Claim Animations ── */
+@keyframes claimPulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(233, 177, 20, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(233, 177, 20, 0.45), 0 0 0 8px rgba(233, 177, 20, 0.08);
+  }
+}
+
+@keyframes claimShimmer {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes claimSuccessReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes claimSuccessBounce {
+  0% { transform: scale(0.5); }
+  50% { transform: scale(1.15); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
 /* ── Dates Stamp ── */
 .datesStamp {
   display: flex;
@@ -768,5 +964,11 @@
 
   .giftAmount {
     font-size: 32px;
+  }
+
+  .claimButton {
+    padding: 14px 32px;
+    font-size: 15px;
+    width: 100%;
   }
 }

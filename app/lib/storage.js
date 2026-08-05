@@ -130,6 +130,9 @@ export async function updateCapsule(id, updates) {
   if (updates.openedAt !== undefined) dbUpdates.opened_at = updates.openedAt;
   if (updates.title !== undefined) dbUpdates.title = updates.title;
   if (updates.message !== undefined) dbUpdates.message = updates.message;
+  if (updates.giftClaimed !== undefined) dbUpdates.gift_claimed = updates.giftClaimed;
+  if (updates.giftClaimedBy !== undefined) dbUpdates.gift_claimed_by = updates.giftClaimedBy;
+  if (updates.giftClaimedAt !== undefined) dbUpdates.gift_claimed_at = updates.giftClaimedAt;
 
   const { data, error } = await supabase
     .from('capsules')
@@ -169,6 +172,48 @@ export async function updateCapsule(id, updates) {
   }
 
   return transformCapsule(data);
+}
+
+/**
+ * Claim the NIM gift attached to a capsule.
+ * Marks it as claimed and records the claimer's wallet address.
+ */
+export async function claimGift(capsuleId, claimerAddress) {
+  // First check if already claimed
+  const capsule = await getCapsule(capsuleId);
+  if (!capsule) throw new Error('Capsule not found');
+  if (!capsule.gift?.enabled || !capsule.gift?.amount) throw new Error('No gift attached to this capsule');
+  if (capsule.gift?.claimed) throw new Error('This gift has already been claimed');
+  if (capsule.status !== 'opened' && !capsule.openedAt) throw new Error('Capsule must be opened before claiming the gift');
+
+  const updated = await updateCapsule(capsuleId, {
+    giftClaimed: true,
+    giftClaimedBy: claimerAddress,
+    giftClaimedAt: new Date().toISOString(),
+  });
+
+  // Insert a notification for the capsule owner
+  try {
+    const { data: capsuleRow } = await ensureSupabase()
+      .from('capsules')
+      .select('user_id, title')
+      .eq('id', capsuleId)
+      .single();
+
+    if (capsuleRow) {
+      await ensureSupabase().from('notifications').insert({
+        user_id: capsuleRow.user_id,
+        title: 'Gift Claimed',
+        message: `The NIM gift in your capsule "${capsuleRow.title}" has been claimed by ${claimerAddress}.`,
+        type: 'gift_claimed',
+        capsule_id: capsuleId,
+      });
+    }
+  } catch (nErr) {
+    console.error('[NimCapsule] Failed to save gift claim notification:', nErr);
+  }
+
+  return updated;
 }
 
 /**
@@ -389,7 +434,14 @@ function transformCapsule(row) {
     photos: (row.capsule_photos || [])
       .sort((a, b) => a.display_order - b.display_order)
       .map(p => p.storage_path),
-    gift: { enabled: row.gift_enabled, amount: row.gift_amount, txHash: row.tx_hash },
+    gift: {
+      enabled: row.gift_enabled,
+      amount: row.gift_amount,
+      txHash: row.tx_hash,
+      claimed: row.gift_claimed || false,
+      claimedBy: row.gift_claimed_by || null,
+      claimedAt: row.gift_claimed_at || null,
+    },
     unlockDate: row.unlock_date,
     createdAt: row.created_at,
     openedAt: row.opened_at,

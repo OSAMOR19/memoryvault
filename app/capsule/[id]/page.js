@@ -17,13 +17,18 @@ import {
   CheckCircle,
   PackageOpen,
   Search,
+  Wallet,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import {
   getCapsule,
   updateCapsule,
+  claimGift,
   getEffectiveStatus,
   getPhotoUrl,
 } from '../../lib/storage';
+import { connectNimiqWallet, getStoredNimiqAddress } from '../../lib/nimiq';
 import { formatLong, formatMedium, getCountdown } from '../../lib/dates';
 import ShareLinkButton from '../../components/ShareLinkButton';
 import styles from './capsule.module.css';
@@ -109,6 +114,9 @@ export default function CapsuleDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [claimSuccess, setClaimSuccess] = useState(false);
+  const [claimError, setClaimError] = useState('');
 
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
@@ -158,6 +166,40 @@ export default function CapsuleDetailPage({ params }) {
         setTimeout(() => setShowConfetti(false), 4000);
       }
     }, 2000);
+  }, [capsuleId]);
+
+  // ── Handle NIM gift claim ──
+  const handleClaim = useCallback(async () => {
+    setClaiming(true);
+    setClaimError('');
+
+    try {
+      // 1. Get or connect wallet
+      let walletAddress = getStoredNimiqAddress();
+
+      if (!walletAddress) {
+        const res = await connectNimiqWallet();
+        if (res?.success && res.address) {
+          walletAddress = res.address;
+        } else {
+          setClaimError(res?.error || 'Please connect your Nimiq wallet to claim this gift.');
+          setClaiming(false);
+          return;
+        }
+      }
+
+      // 2. Claim the gift in the database
+      const updated = await claimGift(capsuleId, walletAddress);
+      setCapsule(updated);
+      setClaimSuccess(true);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 4000);
+    } catch (err) {
+      console.error('[NimCapsule] Claim error:', err);
+      setClaimError(err.message || 'Failed to claim gift. Please try again.');
+    } finally {
+      setClaiming(false);
+    }
   }, [capsuleId]);
 
   const OccasionIcon = capsule ? (OCCASION_ICONS[capsule.occasion] || Package) : Package;
@@ -396,6 +438,65 @@ export default function CapsuleDetailPage({ params }) {
                   {capsule.gift.amount}
                   <span className={styles.giftUnit}> NIM</span>
                 </div>
+
+                {/* ── Claim Button / Claimed Badge ── */}
+                {capsule.gift.claimed ? (
+                  <div className={styles.claimedSection}>
+                    <div className={styles.claimedBadge}>
+                      <CheckCircle size={18} />
+                      <span>Claimed</span>
+                    </div>
+                    {capsule.gift.claimedBy && (
+                      <div className={styles.claimedDetails}>
+                        <span className={styles.claimedAddress}>
+                          {capsule.gift.claimedBy.length > 16
+                            ? `${capsule.gift.claimedBy.slice(0, 8)}...${capsule.gift.claimedBy.slice(-6)}`
+                            : capsule.gift.claimedBy}
+                        </span>
+                        {capsule.gift.claimedAt && (
+                          <span className={styles.claimedDate}>
+                            {formatMedium(capsule.gift.claimedAt)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : claimSuccess ? (
+                  <div className={styles.claimSuccessSection}>
+                    <div className={styles.claimSuccessIcon}>
+                      <CheckCircle size={24} />
+                    </div>
+                    <div className={styles.claimSuccessText}>Gift Claimed Successfully!</div>
+                  </div>
+                ) : (
+                  <div className={styles.claimSection}>
+                    <button
+                      className={styles.claimButton}
+                      onClick={handleClaim}
+                      disabled={claiming}
+                      type="button"
+                      id="claim-nim-button"
+                    >
+                      {claiming ? (
+                        <>
+                          <Loader2 size={20} className={styles.claimSpinner} />
+                          <span>Claiming...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download size={20} />
+                          <span>Claim {capsule.gift.amount} NIM</span>
+                        </>
+                      )}
+                    </button>
+                    {claimError && (
+                      <div className={styles.claimError}>{claimError}</div>
+                    )}
+                    <p className={styles.claimHint}>
+                      Connect your Nimiq wallet to claim this gift
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

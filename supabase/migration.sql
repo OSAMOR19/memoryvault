@@ -308,3 +308,10 @@ BEGIN
   RETURN result;
 END;
 $$;
+
+-- ── Gift Claim Tracking Columns ──────────────────────────────
+-- Tracks whether a NIM gift attached to a capsule has been claimed
+-- Run this in Supabase SQL Editor if updating an existing deployment
+ALTER TABLE public.capsules ADD COLUMN IF NOT EXISTS gift_claimed BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.capsules ADD COLUMN IF NOT EXISTS gift_claimed_by TEXT;
+ALTER TABLE public.capsules ADD COLUMN IF NOT EXISTS gift_claimed_at TIMESTAMPTZ;
