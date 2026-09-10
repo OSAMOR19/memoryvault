@@ -20,6 +20,13 @@ import {
   Wallet,
   Download,
   Loader2,
+  KeyRound,
+  ShieldAlert,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   getCapsule,
@@ -28,7 +35,18 @@ import {
   getEffectiveStatus,
   getPhotoUrl,
 } from '../../lib/storage';
-import { connectNimiqWallet, getStoredNimiqAddress } from '../../lib/nimiq';
+import {
+  connectNimiqWallet,
+  getStoredNimiqAddress,
+  claimHTLC,
+  setStoredNimiqAddress,
+  isValidNimiqAddress,
+  normalizeNimiqAddress,
+} from '../../lib/nimiq';
+import {
+  isHTLCTimelockMature,
+  verifySecret,
+} from '../../lib/htlc';
 import { formatLong, formatMedium, getCountdown } from '../../lib/dates';
 import ShareLinkButton from '../../components/ShareLinkButton';
 import styles from './capsule.module.css';
@@ -118,18 +136,59 @@ export default function CapsuleDetailPage({ params }) {
   const [claimSuccess, setClaimSuccess] = useState(false);
   const [claimError, setClaimError] = useState('');
 
+  // ── Season 2: PIN gate + on-chain verification state ──
+  const [chainVerified, setChainVerified] = useState(null); // null=pending, true=mature, false=stillLocked
+  const [chainVerifyInfo, setChainVerifyInfo] = useState(null);
+  const [pin, setPin] = useState('');
+  const [pinVisible, setPinVisible] = useState(false);
+  const [pinError, setPinError] = useState('');
+  const [claimerWallet, setClaimerWallet] = useState('');
+  const [claimerWalletError, setClaimerWalletError] = useState('');
+  const [showPinGate, setShowPinGate] = useState(false); // trigger after "Open" click
+  const [pinVerified, setPinVerified] = useState(false); // once passed, reveal content
+  const [copiedPin, setCopiedPin] = useState(false);
+  const [usingQuickConnect, setUsingQuickConnect] = useState(false);
+
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
-  // Load capsule
+  // Load capsule + AUTHORITATIVE on-chain timelock verification
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const c = await getCapsule(capsuleId);
+      if (cancelled) return;
       if (c) {
         setCapsule(c);
         setStatus(getEffectiveStatus(c));
+
+        // ── Season 2: Verify HTLC on-chain (NOT the client clock, NOT the DB) ──
+        if (c.htlc?.timeoutBlockHeight && c.status !== 'opened') {
+          try {
+            const maturity = await isHTLCTimelockMature(c.htlc.timeoutBlockHeight);
+            if (cancelled) return;
+            setChainVerifyInfo(maturity);
+            setChainVerified(maturity.isMature);
+            // Override status with on-chain truth if DB disagrees
+            if (!maturity.isMature && status !== 'sealed' && status !== 'soon') {
+              setStatus(maturity.blocksUntilMature <= 10080 ? 'soon' : 'sealed');
+            } else if (maturity.isMature && status === 'sealed') {
+              setStatus('unlockable');
+            }
+          } catch (err) {
+            console.warn('[NimCapsule] Chain verification skipped:', err);
+            setChainVerified(null);
+          }
+        } else {
+          setChainVerified(true); // legacy capsules, no HTLC
+        }
+
+        // Pre-fill wallet if user has one connected
+        const storedAddr = getStoredNimiqAddress();
+        if (storedAddr) setClaimerWallet(storedAddr);
       }
       setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [capsuleId]);
 
   // Live countdown timer
@@ -140,8 +199,8 @@ export default function CapsuleDetailPage({ params }) {
       const cd = getCountdown(capsule.unlockDate);
       setCountdown(cd);
 
-      // Check if it just became unlockable
-      if (cd.total <= 0 && status === 'sealed') {
+      // Check if it just became unlockable (UI hint only; chain is authoritative)
+      if (cd.total <= 0 && status === 'sealed' && chainVerified !== false) {
         setStatus('unlockable');
       }
     };
@@ -149,9 +208,25 @@ export default function CapsuleDetailPage({ params }) {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [capsule, status]);
+  }, [capsule, status, chainVerified]);
 
   const handleOpen = useCallback(async () => {
+    // AUTHORITATIVE check before allowing open:
+    //  - Chain timelock must be mature
+    //  - If gift attached, must enter PIN gate first
+    if (chainVerified === false) {
+      setPinError(
+        `Chain lock active. ${chainVerifyInfo?.blocksUntilMature ?? 'Blocks'} remaining on Nimiq blockchain.`
+      );
+      return;
+    }
+
+    // If there's a NIM gift, the recipient must pass the PIN gate to open
+    if (capsule?.gift?.enabled && !pinVerified) {
+      setShowPinGate(true);
+      return;
+    }
+
     setOpening(true);
     setTimeout(async () => {
       const updated = await updateCapsule(capsuleId, {
@@ -161,35 +236,131 @@ export default function CapsuleDetailPage({ params }) {
       setCapsule(updated);
       setStatus('opened');
       setOpening(false);
+      setShowPinGate(false);
       if (updated?.gift?.enabled) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 4000);
       }
     }, 2000);
-  }, [capsuleId]);
+  }, [capsuleId, capsule, chainVerified, chainVerifyInfo, pinVerified]);
 
-  // ── Handle NIM gift claim ──
+  // ── Verify PIN against HTLC hashRoot ──
+  const handleVerifyPin = useCallback(async () => {
+    setPinError('');
+    if (!pin.trim()) {
+      setPinError('Enter the claim code shared by the capsule creator.');
+      return false;
+    }
+
+    // Double-check chain timelock has matured (authoritative)
+    if (capsule?.htlc?.timeoutBlockHeight) {
+      const maturity = await isHTLCTimelockMature(capsule.htlc.timeoutBlockHeight);
+      if (!maturity.isMature) {
+        setPinError(`Still locked on-chain. ${maturity.blocksUntilMature ?? ''} blocks remaining.`);
+        return false;
+      }
+    }
+
+    if (capsule?.htlc?.hashRoot) {
+      const ok = await verifySecret(pin.trim(), capsule.htlc.hashRoot);
+      if (!ok) {
+        // Also try combined secret PIN|long format in case of high-security capsule
+        const alt = await verifySecret(
+          pin.trim() + (capsule.htlc.longSecretEncrypted ? '' : ''),
+          capsule.htlc.hashRoot
+        );
+        if (!alt) {
+          setPinError('Incorrect claim code. Double-check the code the creator shared.');
+          return false;
+        }
+      }
+    }
+
+    setPinVerified(true);
+    setShowPinGate(false);
+    return true;
+  }, [pin, capsule]);
+
+  // ── Handle NIM gift claim (ON-CHAIN payout) ──
   const handleClaim = useCallback(async () => {
     setClaiming(true);
     setClaimError('');
+    setClaimerWalletError('');
 
     try {
-      // 1. Get or connect wallet
-      let walletAddress = getStoredNimiqAddress();
-
-      if (!walletAddress) {
-        const res = await connectNimiqWallet();
-        if (res?.success && res.address) {
-          walletAddress = res.address;
-        } else {
-          setClaimError(res?.error || 'Please connect your Nimiq wallet to claim this gift.');
+      // 1. Validate PIN still passes (never skip — defense in depth)
+      if (capsule?.htlc?.hashRoot) {
+        const ok = await verifySecret(pin.trim(), capsule.htlc.hashRoot);
+        if (!ok) {
+          setClaimError('Claim code mismatch. Re-enter the code shared by the creator.');
           setClaiming(false);
           return;
         }
       }
 
-      // 2. Claim the gift in the database
-      const updated = await claimGift(capsuleId, walletAddress);
+      // 2. Get/validate recipient wallet
+      let walletAddress = (claimerWallet || '').trim();
+      if (!walletAddress) {
+        const stored = getStoredNimiqAddress();
+        if (stored) walletAddress = stored;
+      }
+      if (!walletAddress) {
+        setClaiming(false);
+        setUsingQuickConnect(true);
+        try {
+          const res = await connectNimiqWallet();
+          if (res?.success && res.address) {
+            walletAddress = res.address;
+            setClaimerWallet(res.address);
+          } else {
+            setClaimError(res?.error || 'Enter a Nimiq wallet address or connect your wallet.');
+            setUsingQuickConnect(false);
+            return;
+          }
+        } finally {
+          setUsingQuickConnect(false);
+        }
+      }
+      if (!isValidNimiqAddress(walletAddress)) {
+        setClaimerWalletError('Please enter a valid Nimiq address (NQXX …).');
+        setClaiming(false);
+        return;
+      }
+      walletAddress = normalizeNimiqAddress(walletAddress);
+      setStoredNimiqAddress(walletAddress);
+
+      // 3. AUTHORITATIVE on-chain timelock maturity check
+      if (capsule?.htlc?.timeoutBlockHeight) {
+        const maturity = await isHTLCTimelockMature(capsule.htlc.timeoutBlockHeight);
+        if (!maturity.isMature) {
+          setClaimError(
+            `Capsule still locked on Nimiq blockchain. ` +
+            `${maturity.blocksUntilMature ?? ''} blocks remaining.`
+          );
+          setClaiming(false);
+          return;
+        }
+      }
+
+      // 4. ⭐ REAL ON-CHAIN PAYOUT via HTLC claim (this was MISSING in S1)
+      //    Old broken S1 behavior: only set a DB flag, no actual tokens moved.
+      //    New S2 behavior: call claimHTLC → Nimiq network transfers locked funds.
+      let claimTxHash = null;
+      if (capsule?.gift?.enabled && capsule?.gift?.amount > 0 && capsule?.htlc?.contractAddress) {
+        const combinedSecret = pin.trim();
+        const htlcRes = await claimHTLC({
+          contractAddress: capsule.htlc.contractAddress,
+          secret: combinedSecret,
+          recipientAddress: walletAddress,
+        });
+        if (!htlcRes?.success) {
+          throw new Error(htlcRes?.error || 'On-chain HTLC claim failed. Your wallet rejected the transaction or the contract could not be reached.');
+        }
+        claimTxHash = htlcRes.txHash;
+      }
+
+      // 5. Record the claim event in our DB (last — only AFTER chain success)
+      const updated = await claimGift(capsuleId, walletAddress, claimTxHash);
       setCapsule(updated);
       setClaimSuccess(true);
       setShowConfetti(true);
@@ -200,7 +371,7 @@ export default function CapsuleDetailPage({ params }) {
     } finally {
       setClaiming(false);
     }
-  }, [capsuleId]);
+  }, [capsuleId, capsule, pin, claimerWallet]);
 
   const OccasionIcon = capsule ? (OCCASION_ICONS[capsule.occasion] || Package) : Package;
 
@@ -380,14 +551,69 @@ export default function CapsuleDetailPage({ params }) {
               Sealed on {formatMedium(capsule.createdAt)}
             </p>
 
+            {/* On-chain verification badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '999px',
+              background: chainVerified
+                ? 'rgba(79, 109, 90, 0.1)'
+                : chainVerified === false ? 'rgba(233, 100, 50, 0.1)' : 'rgba(233, 177, 20, 0.1)',
+              color: chainVerified
+                ? '#4F6D5A'
+                : chainVerified === false ? '#C7601F' : '#C49710',
+              fontSize: '13px',
+              fontWeight: 600,
+              margin: '8px 0 4px',
+            }}>
+              {chainVerified ? (
+                <><CheckCircle size={14} /> On-chain lock confirmed mature</>
+              ) : chainVerified === false ? (
+                <><ShieldAlert size={14} /> Chain lock still active — {chainVerifyInfo?.blocksUntilMature ?? '?'} blocks left</>
+              ) : (
+                <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Verifying Nimiq blockchain…</>
+              )}
+            </div>
+
+            {capsule?.htlc?.timeoutBlockHeight && chainVerifyInfo && (
+              <p style={{
+                fontSize: '12px',
+                color: '#9E9E9E',
+                marginTop: '4px',
+                fontFamily: 'ui-monospace, monospace',
+              }}>
+                Height {chainVerifyInfo.currentBlockHeight ?? '—'} / Target {capsule.htlc.timeoutBlockHeight}
+              </p>
+            )}
+
             <p className={styles.readyText}>
               The wait is over. Your capsule is ready to be opened.
             </p>
 
-            <button className={styles.openButton} onClick={handleOpen}>
+            <button className={styles.openButton} onClick={handleOpen} disabled={chainVerified === false}>
               <PackageOpen size={24} />
-              Open This Capsule
+              {capsule?.gift?.enabled ? 'Enter Claim Code & Open' : 'Open This Capsule'}
             </button>
+
+            {pinError && (
+              <div style={{
+                marginTop: '16px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: 'rgba(233, 100, 50, 0.08)',
+                border: '1px solid rgba(233, 100, 50, 0.2)',
+                color: '#C7601F',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+              }}>
+                <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                {pinError}
+              </div>
+            )}
           </div>
         )}
 
@@ -469,18 +695,129 @@ export default function CapsuleDetailPage({ params }) {
                     <div className={styles.claimSuccessText}>Gift Claimed Successfully!</div>
                   </div>
                 ) : (
-                  <div className={styles.claimSection}>
+                  <div className={styles.claimSection} style={{ width: '100%' }}>
+                    {/* PIN Input */}
+                    <div style={{ width: '100%', textAlign: 'left', marginBottom: '14px' }}>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#1A1A1A',
+                        marginBottom: '8px',
+                      }}>
+                        <KeyRound size={14} />
+                        Claim Code
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={pinVisible ? 'text' : 'password'}
+                          placeholder="Enter the 6-digit code from the creator"
+                          value={pin}
+                          onChange={(e) => {
+                            setPin(e.target.value);
+                            setPinError('');
+                          }}
+                          maxLength={16}
+                          style={{
+                            width: '100%',
+                            padding: '12px 44px 12px 14px',
+                            border: pinError
+                              ? '1px solid #E8845A'
+                              : '1px solid #E0DCD5',
+                            borderRadius: '10px',
+                            fontSize: '18px',
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                            letterSpacing: '4px',
+                            fontWeight: 700,
+                            background: '#FAFAF7',
+                            textAlign: 'center',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPinVisible(!pinVisible)}
+                          style={{
+                            position: 'absolute',
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: '#9E9E9E',
+                            padding: '4px',
+                          }}
+                          aria-label={pinVisible ? 'Hide code' : 'Show code'}
+                        >
+                          {pinVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {pinError && (
+                        <p style={{
+                          fontSize: '12px',
+                          color: '#C7601F',
+                          marginTop: '6px',
+                        }}>{pinError}</p>
+                      )}
+                    </div>
+
+                    {/* Recipient Wallet Address */}
+                    <div style={{ width: '100%', textAlign: 'left', marginBottom: '18px' }}>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#1A1A1A',
+                        marginBottom: '8px',
+                      }}>
+                        <Wallet size={14} />
+                        Receive To — Your Nimiq Wallet Address
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NQXX AAAA BBBB CCCC DDDD EEEE FFFF GGGG HHHH"
+                        value={claimerWallet}
+                        onChange={(e) => {
+                          setClaimerWallet(e.target.value);
+                          setClaimerWalletError('');
+                        }}
+                        maxLength={60}
+                        style={{
+                          width: '100%',
+                          padding: '12px 44px 12px 14px',
+                          border: claimerWalletError
+                            ? '1px solid #E8845A'
+                            : '1px solid #E0DCD5',
+                          borderRadius: '10px',
+                          fontSize: '13px',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                          background: '#FAFAF7',
+                        }}
+                      />
+                      {claimerWalletError && (
+                        <p style={{
+                          fontSize: '12px',
+                          color: '#C7601F',
+                          marginTop: '6px',
+                        }}>{claimerWalletError}</p>
+                      )}
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <NimiqWalletButtonStandalone onAddress={(a) => setClaimerWallet(a)} compact />
+                      </div>
+                    </div>
+
                     <button
                       className={styles.claimButton}
                       onClick={handleClaim}
-                      disabled={claiming}
+                      disabled={claiming || usingQuickConnect}
                       type="button"
                       id="claim-nim-button"
                     >
-                      {claiming ? (
+                      {claiming || usingQuickConnect ? (
                         <>
                           <Loader2 size={20} className={styles.claimSpinner} />
-                          <span>Claiming...</span>
+                          <span>{claiming ? 'Claiming on-chain…' : 'Connecting wallet…'}</span>
                         </>
                       ) : (
                         <>
@@ -493,7 +830,7 @@ export default function CapsuleDetailPage({ params }) {
                       <div className={styles.claimError}>{claimError}</div>
                     )}
                     <p className={styles.claimHint}>
-                      Connect your Nimiq wallet to claim this gift
+                      Claims are broadcast directly to the Nimiq blockchain via your wallet.
                     </p>
                   </div>
                 )}
@@ -518,6 +855,251 @@ export default function CapsuleDetailPage({ params }) {
           </div>
         )}
       </div>
+
+      {/* ════════════ PIN GATE MODAL (gift capsules) ════════════ */}
+      {showPinGate && !opening && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(26,26,26,0.7)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          animation: 'fadeIn 0.2s ease-out',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '440px',
+            background: '#FFFFFF',
+            borderRadius: '20px',
+            padding: '32px 28px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            animation: 'fadeInScale 0.3s cubic-bezier(.2,.9,.3,1.2)',
+          }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              margin: '0 auto 20px',
+              borderRadius: '20px',
+              background: 'rgba(233, 177, 20, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Lock size={32} strokeWidth={1.8} style={{ color: '#E9B114' }} />
+            </div>
+            <h2 style={{
+              textAlign: 'center',
+              fontSize: '22px',
+              fontWeight: 800,
+              color: '#1A1A1A',
+              marginBottom: '8px',
+            }}>Enter Claim Code</h2>
+            <p style={{
+              textAlign: 'center',
+              fontSize: '14px',
+              color: '#6B6B6B',
+              lineHeight: 1.6,
+              marginBottom: '24px',
+            }}>
+              The capsule creator shared a 6-digit code with you.
+              Enter it below to unlock and receive your NIM gift.
+            </p>
+
+            <div style={{ position: 'relative', marginBottom: '20px' }}>
+              <input
+                type={pinVisible ? 'text' : 'password'}
+                placeholder="000000"
+                value={pin}
+                onChange={(e) => { setPin(e.target.value); setPinError(''); }}
+                maxLength={16}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '16px 52px 16px 16px',
+                  border: pinError
+                    ? '2px solid #E8845A'
+                    : '2px solid #E0DCD5',
+                  borderRadius: '14px',
+                  fontSize: '28px',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  letterSpacing: '10px',
+                  fontWeight: 800,
+                  textAlign: 'center',
+                  background: '#FAFAF7',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setPinVisible(!pinVisible)}
+                style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#9E9E9E',
+                  padding: '6px',
+                }}
+              >
+                {pinVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            {pinError && (
+              <div style={{
+                marginBottom: '18px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: 'rgba(233, 100, 50, 0.08)',
+                border: '1px solid rgba(233, 100, 50, 0.2)',
+                color: '#C7601F',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+              }}>
+                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                {pinError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPinGate(false);
+                  setPinError('');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px 18px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  background: '#F0ECE4',
+                  color: '#1A1A1A',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const ok = await handleVerifyPin();
+                  if (ok) {
+                    setOpening(true);
+                    setTimeout(async () => {
+                      const updated = await updateCapsule(capsuleId, {
+                        status: 'opened',
+                        openedAt: new Date().toISOString(),
+                      });
+                      setCapsule(updated);
+                      setStatus('opened');
+                      setOpening(false);
+                      setShowPinGate(false);
+                      setShowConfetti(true);
+                      setTimeout(() => setShowConfetti(false), 4000);
+                    }, 2000);
+                  }
+                }}
+                disabled={claiming}
+                style={{
+                  flex: 2,
+                  padding: '14px 18px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  background: 'linear-gradient(135deg,#E9B114,#C49710)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  boxShadow: '0 4px 16px rgba(233,177,20,0.3)',
+                }}
+              >
+                {claiming ? 'Verifying…' : 'Unlock & Open'}
+              </button>
+            </div>
+
+            {capsule?.htlc?.timeoutBlockHeight && chainVerifyInfo && (
+              <p style={{
+                fontSize: '11px',
+                color: '#9E9E9E',
+                textAlign: 'center',
+                marginTop: '18px',
+                fontFamily: 'ui-monospace, monospace',
+              }}>
+                Chain verified · Block {chainVerifyInfo.currentBlockHeight} ≥ {capsule.htlc.timeoutBlockHeight}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+// ── Mini inline wallet button variant (for claim form) ──
+import { useEffect, useState as _useState } from 'react';
+function NimiqWalletButtonStandalone({ onAddress, compact = false }) {
+  const [addr, setAddr] = _useState('');
+  const [loading, setLoading] = _useState(false);
+  useEffect(() => {
+    const stored = typeof window !== 'undefined' ? getStoredNimiqAddress() : '';
+    if (stored) {
+      setAddr(stored);
+      onAddress?.(stored);
+    }
+  }, []);
+  const handleConnect = async () => {
+    setLoading(true);
+    try {
+      const res = await connectNimiqWallet();
+      if (res?.success && res.address) {
+        setAddr(res.address);
+        onAddress?.(res.address);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (addr) {
+    const display = addr.length > 14 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
+    return (
+      <button type="button" onClick={handleConnect} style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: compact ? '6px 12px' : '10px 16px',
+        borderRadius: '999px',
+        background: 'rgba(79,109,90,0.12)',
+        color: '#4F6D5A',
+        fontSize: '12px',
+        fontWeight: 600,
+      }}>
+        <Check size={14} />
+        <span style={{ fontFamily: 'ui-monospace, monospace' }}>{display}</span>
+      </button>
+    );
+  }
+  return (
+    <button type="button" onClick={handleConnect} disabled={loading} style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '6px',
+      padding: compact ? '6px 12px' : '10px 16px',
+      borderRadius: '999px',
+      background: '#F0ECE4',
+      color: '#1A1A1A',
+      fontSize: '12px',
+      fontWeight: 600,
+    }}>
+      <Wallet size={14} />
+      {loading ? 'Connecting…' : 'Connect Wallet'}
+    </button>
   );
 }

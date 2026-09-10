@@ -19,6 +19,7 @@ import {
   Moon,
   Shield,
   AlertCircle,
+  KeyRound,
 } from 'lucide-react';
 import { addCapsule } from '../lib/storage';
 import {
@@ -28,7 +29,12 @@ import {
   formatLong,
   getRelativeTime,
 } from '../lib/dates';
-import { sendNimiqTransaction } from '../lib/nimiq';
+import {
+  createHTLC,
+  getStoredNimiqAddress,
+  connectNimiqWallet,
+} from '../lib/nimiq';
+import { buildHTLCParams, verifySecret } from '../lib/htlc';
 import NimiqWalletButton from '../components/NimiqWalletButton';
 import ShareLinkButton from '../components/ShareLinkButton';
 import styles from './create.module.css';
@@ -81,10 +87,17 @@ export default function CreateCapsulePage() {
   // Step 3
   const [giftEnabled, setGiftEnabled] = useState(false);
   const [giftAmount, setGiftAmount] = useState(10);
+  const [recipientAddress, setRecipientAddress] = useState('');
 
   // Step 4
   const [unlockDate, setUnlockDate] = useState('');
   const [activeChip, setActiveChip] = useState(null);
+
+  // Sealing result — PIN shown to creator ONCE for sharing with recipient
+  const [revealedPIN, setRevealedPIN] = useState('');
+  const [revealedLongSecret, setRevealedLongSecret] = useState('');
+  const [htlcContract, setHtlcContract] = useState('');
+  const [htlcTimelockBlock, setHtlcTimelockBlock] = useState(null);
 
   const progress = (step / TOTAL_STEPS) * 100;
 
@@ -144,23 +157,57 @@ export default function CreateCapsulePage() {
     setSealing(true);
 
     try {
+      // ── 1. Build HTLC params (hashlock + timelock projection) ──
+      // This is the REAL on-chain lock — NOT a Supabase date column.
+      let htlcParams = null;
+      let htlcResult = null;
       let txHash = null;
+
       if (giftEnabled && giftAmount > 0) {
-        try {
-          const res = await sendNimiqTransaction({
-            recipient: 'NQ0700000000000000000000000000000000',
-            amountNim: giftAmount,
-          });
-          if (res?.success) {
-            txHash = res.txHash;
-          } else if (res?.error) {
-            console.warn('[NimCapsule] Nimiq transaction notice:', res.error);
+        // Use creator's wallet as recipient fallback if none entered.
+        // In a full claim flow the recipient provides their own address.
+        const recipient = recipientAddress.trim() || getStoredNimiqAddress() || '';
+        if (!recipient) {
+          const conn = await connectNimiqWallet();
+          if (conn?.success) {
+            // Donate-to-holder pattern: lock to creator's own derived HTLC address.
+            // Recipient can claim via PIN entry + wallet connect later.
+          } else {
+            throw new Error(conn?.error || 'Connect your Nimiq wallet to attach a gift.');
           }
+        }
+
+        htlcParams = await buildHTLCParams({
+          unlockDate: new Date(unlockDate).toISOString(),
+          recipientAddress: recipient,
+          securityLevel: recipient ? 'standard' : 'high',
+        });
+        if (htlcParams.error) {
+          throw new Error(htlcParams.error);
+        }
+
+        // ── 2. Lock funds in HTLC on Nimiq ──
+        // Old broken code (funds burned):
+        //   sendNimiqTransaction({ recipient: 'NQ0700000000000000000000000000000000', ... })
+        // New correct code (real time-lock):
+        try {
+          htlcResult = await createHTLC({
+            recipientAddress: recipient || getStoredNimiqAddress(),
+            amountNim: giftAmount,
+            hashRoot: htlcParams.hashRoot,
+            timeoutBlockHeight: htlcParams.timeoutBlockHeight,
+          });
+          if (!htlcResult?.success) {
+            throw new Error(htlcResult?.error || 'Failed to lock funds in HTLC.');
+          }
+          txHash = htlcResult.txHash;
         } catch (nErr) {
-          console.warn('[NimCapsule] Nimiq transaction error:', nErr);
+          console.error('[NimCapsule] HTLC creation error:', nErr);
+          throw nErr;
         }
       }
 
+      // ── 3. Save capsule with HTLC params ──
       const capsule = await addCapsule({
         title: title.trim(),
         occasion,
@@ -168,9 +215,27 @@ export default function CreateCapsulePage() {
         photos,
         gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0, txHash },
         unlockDate: new Date(unlockDate).toISOString(),
+        htlc: {
+          contractAddress: htlcResult?.contractAddress || null,
+          hashRoot: htlcParams?.hashRoot || null,
+          timeoutBlockHeight: htlcParams?.timeoutBlockHeight || null,
+          currentBlockHeight: htlcParams?.currentBlockHeight || null,
+          pin: htlcParams?.pin || null,
+          longSecret: htlcParams?.longSecret || null,
+          recipientAddressHint: recipientAddress.trim() ? recipientAddress.slice(0, 6) + '...' + recipientAddress.slice(-4) : null,
+        },
       });
 
+      // ── 4. Reveal PIN to the CREATOR ONLY ONCE (for sharing) ──
+      //    This PIN is the hashlock preimage. Without it, nobody can claim.
       setCreatedCapsuleId(capsule.id);
+      if (htlcParams?.pin) {
+        setRevealedPIN(htlcParams.pin);
+        setRevealedLongSecret(htlcParams.longSecret || '');
+      }
+      if (htlcResult?.contractAddress) setHtlcContract(htlcResult.contractAddress);
+      if (htlcParams?.timeoutBlockHeight) setHtlcTimelockBlock(htlcParams.timeoutBlockHeight);
+
       setTimeout(() => {
         setSealing(false);
         setSealed(true);
@@ -178,7 +243,7 @@ export default function CreateCapsulePage() {
     } catch (err) {
       console.error('[NimCapsule] Seal error:', err);
       setSealing(false);
-      setError('Failed to create capsule. Please try again.');
+      setError(err.message || 'Failed to create capsule. Please try again.');
     }
   };
 
@@ -239,7 +304,7 @@ export default function CreateCapsulePage() {
     );
   }
 
-  // Capsule sealed — show share link
+  // Capsule sealed — show share link + (IF GIFT) claim PIN
   if (sealed && createdCapsuleId) {
     return (
       <div className={styles.page}>
@@ -251,6 +316,86 @@ export default function CreateCapsulePage() {
           <p className={styles.sealSubtext}>
             It will sleep until {formatLong(unlockDate)}
           </p>
+
+          {/* ═══ CLAIM PIN REVEAL (gift capsules only) ═══ */}
+          {revealedPIN && (
+            <div style={{
+              marginTop: '24px',
+              padding: '24px 28px',
+              borderRadius: '16px',
+              background: '#FFFDF5',
+              border: '2px dashed #E9B114',
+              textAlign: 'center',
+              maxWidth: '420px',
+              width: '100%',
+              animation: 'fadeInScale 0.5s ease-out',
+            }}>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#C49710',
+                textTransform: 'uppercase',
+                letterSpacing: '1.5px',
+                marginBottom: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}>
+                <KeyRound size={14} />
+                Claim Code — Show This To The Recipient
+              </div>
+              <div style={{
+                fontSize: '44px',
+                fontWeight: 800,
+                letterSpacing: '8px',
+                color: '#1A1A1A',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                lineHeight: 1,
+                margin: '12px 0 8px',
+                userSelect: 'all',
+              }}>
+                {revealedPIN}
+              </div>
+              {revealedLongSecret && (
+                <div style={{
+                  fontSize: '11px',
+                  color: '#9E9E9E',
+                  fontFamily: 'ui-monospace, monospace',
+                  wordBreak: 'break-all',
+                  marginTop: '10px',
+                  paddingTop: '10px',
+                  borderTop: '1px solid rgba(233,177,20,0.2)',
+                }}>
+                  High-security token: {revealedLongSecret}
+                </div>
+              )}
+              <div style={{
+                fontSize: '12px',
+                color: '#6B6B6B',
+                marginTop: '12px',
+                lineHeight: 1.6,
+              }}>
+                The recipient needs this code to unlock the NIM gift.
+                <br /><strong>Store it safely</strong> — you won&apos;t see it again.
+              </div>
+            </div>
+          )}
+
+          {htlcContract && (
+            <div style={{
+              marginTop: '16px',
+              fontSize: '12px',
+              color: '#6B6B6B',
+              fontFamily: 'ui-monospace, monospace',
+              maxWidth: '420px',
+              wordBreak: 'break-all',
+            }}>
+              HTLC: {htlcContract}
+              {htlcTimelockBlock && ` · Block ${htlcTimelockBlock}`}
+            </div>
+          )}
+
           <div className={styles.shareLinkSection}>
             <p className={styles.shareLinkLabel}>Share this capsule with someone special</p>
             <ShareLinkButton capsuleId={createdCapsuleId} variant="prominent" />
@@ -480,8 +625,66 @@ export default function CreateCapsulePage() {
                     {giftAmount} <span style={{ fontSize: '20px' }}>NIM</span>
                   </div>
                   <div className={styles.giftPreviewNote}>
-                    Will be securely locked until {unlockDate ? formatLong(unlockDate) : 'the unlock date'}
+                    Locked on-chain via Nimiq HTLC until {unlockDate ? formatLong(unlockDate) : 'the unlock date'}
                   </div>
+
+                  {/* Recipient wallet address (optional — recipient can enter on claim) */}
+                  <div style={{ width: '100%', marginTop: '20px', textAlign: 'left' }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#1A1A1A',
+                      marginBottom: '8px',
+                    }}>
+                      Recipient&apos;s Nimiq Address <span style={{ color: '#9E9E9E', fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="NQXX AAAA BBBB CCCC DDDD EEEE FFFF GGGG HHHH"
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        border: '1px solid #E0DCD5',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        background: '#FAFAF7',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                      }}
+                      maxLength={60}
+                    />
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#9E9E9E',
+                      marginTop: '6px',
+                      lineHeight: 1.5,
+                    }}>
+                      If you already know it, enter the recipient&apos;s address.
+                      Otherwise leave blank — the recipient will enter their wallet on claim.
+                    </p>
+                  </div>
+
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '12px 14px',
+                    borderRadius: '10px',
+                    background: 'rgba(79, 109, 90, 0.08)',
+                    border: '1px solid rgba(79, 109, 90, 0.2)',
+                    fontSize: '12px',
+                    lineHeight: 1.6,
+                    color: '#4F6D5A',
+                    textAlign: 'left',
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Shield size={14} />
+                      Nimiq HTLC Time-Lock
+                    </div>
+                    This NIM gift is locked using a Hash Time-Locked Contract.
+                    Neither you nor NimCapsule can unlock it early. The blockchain enforces the date.
+                  </div>
+
                   <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 500, color: '#6B6B6B' }}>
                       Connect your Nimiq Wallet to attach NIM

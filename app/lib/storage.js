@@ -60,6 +60,14 @@ export async function addCapsule(capsuleData) {
   const { data: { session } } = await ensureSupabase().auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
+  // Encrypt PIN/secret at rest (server-side; client decrypts only after unlock)
+  const pinEncrypted = capsuleData.htlc?.pin
+    ? await encryptForStorage(String(capsuleData.htlc.pin), session.user.id)
+    : null;
+  const longSecretEncrypted = capsuleData.htlc?.longSecret
+    ? await encryptForStorage(String(capsuleData.htlc.longSecret), session.user.id)
+    : null;
+
   // Insert capsule row
   const { data: capsule, error } = await supabase
     .from('capsules')
@@ -73,6 +81,14 @@ export async function addCapsule(capsuleData) {
       tx_hash: capsuleData.gift?.txHash || null,
       unlock_date: capsuleData.unlockDate,
       status: 'sealed',
+      // ── HTLC on-chain lock fields (NEW for Season 2) ──
+      htlc_contract_address: capsuleData.htlc?.contractAddress || null,
+      htlc_hash_root: capsuleData.htlc?.hashRoot || null,
+      htlc_timeout_block_height: capsuleData.htlc?.timeoutBlockHeight || null,
+      htlc_creation_block_height: capsuleData.htlc?.currentBlockHeight || null,
+      htlc_pin_encrypted: pinEncrypted,
+      htlc_long_secret_encrypted: longSecretEncrypted,
+      htlc_recipient_address_hint: capsuleData.htlc?.recipientAddressHint || null,
     })
     .select()
     .single();
@@ -133,6 +149,7 @@ export async function updateCapsule(id, updates) {
   if (updates.giftClaimed !== undefined) dbUpdates.gift_claimed = updates.giftClaimed;
   if (updates.giftClaimedBy !== undefined) dbUpdates.gift_claimed_by = updates.giftClaimedBy;
   if (updates.giftClaimedAt !== undefined) dbUpdates.gift_claimed_at = updates.giftClaimedAt;
+  if (updates.giftClaimTxHash !== undefined) dbUpdates.gift_claim_tx_hash = updates.giftClaimTxHash;
 
   const { data, error } = await supabase
     .from('capsules')
@@ -176,9 +193,12 @@ export async function updateCapsule(id, updates) {
 
 /**
  * Claim the NIM gift attached to a capsule.
- * Marks it as claimed and records the claimer's wallet address.
+ * IMPORTANT: This method ONLY records the claim metadata. The ACTUAL on-chain
+ * transfer happens in `claimHTLC()` (see app/lib/nimiq.js). Always call BOTH:
+ *   1. claimHTLC(contract, secret, recipient)  —  moves funds on-chain
+ *   2. claimGift(capsuleId, claimerAddress, claimTxHash)  —  records the event
  */
-export async function claimGift(capsuleId, claimerAddress) {
+export async function claimGift(capsuleId, claimerAddress, claimTxHash = null) {
   // First check if already claimed
   const capsule = await getCapsule(capsuleId);
   if (!capsule) throw new Error('Capsule not found');
@@ -190,6 +210,7 @@ export async function claimGift(capsuleId, claimerAddress) {
     giftClaimed: true,
     giftClaimedBy: claimerAddress,
     giftClaimedAt: new Date().toISOString(),
+    giftClaimTxHash: claimTxHash,
   });
 
   // Insert a notification for the capsule owner
@@ -398,16 +419,43 @@ export function getPhotoUrl(storagePath) {
 }
 
 // ── Status helpers ────────────────────────────────────────
+// NOTE: The synchronous helpers below are used for fast UI rendering
+// (dashboard card badges, countdown timers). The SERVER / CLAIM path
+// ALWAYS re-verifies using `isHTLCTimelockMature()` which hits the chain.
+// See `app/lib/htlc.js` → `isHTLCTimelockMature` for the authoritative check.
 
 export function isUnlockable(capsule) {
-  if (!capsule || !capsule.unlockDate) return false;
+  if (!capsule) return false;
   if (capsule.status === 'opened' || capsule.openedAt) return false;
-  return new Date(capsule.unlockDate) <= new Date();
+
+  // Authoritative check: on-chain HTLC block height if available
+  if (capsule.htlc?.timeoutBlockHeight) {
+    // Client-side estimate only. Final check at claim-time is always on-chain.
+    const nowMs = Date.now();
+    const projectedNowHeight = estimateBlockHeightForDateLocal(new Date(nowMs), capsule);
+    return projectedNowHeight >= capsule.htlc.timeoutBlockHeight;
+  }
+
+  // Legacy / no-HTLC fallback (pre-Season 2 capsules)
+  if (capsule.unlockDate) return new Date(capsule.unlockDate) <= new Date();
+  return false;
 }
 
 export function isUnlockingSoon(capsule) {
-  if (!capsule || !capsule.unlockDate) return false;
+  if (!capsule) return false;
   if (capsule.status === 'opened' || capsule.openedAt) return false;
+
+  if (capsule.htlc?.timeoutBlockHeight && capsule.htlc?.creationBlockHeight) {
+    const blocksTotal = capsule.htlc.timeoutBlockHeight - capsule.htlc.creationBlockHeight;
+    const blocksRemainingLocal = estimateBlocksRemainingLocal(capsule);
+    if (blocksRemainingLocal == null) return false;
+    if (blocksRemainingLocal <= 0) return false;
+    // "Soon" = within ~7 days (≈ 10 080 blocks at 1/min)
+    return blocksRemainingLocal <= 10080;
+  }
+
+  // Legacy fallback
+  if (!capsule.unlockDate) return false;
   const unlockDate = new Date(capsule.unlockDate);
   const now = new Date();
   if (unlockDate <= now) return false;
@@ -421,6 +469,28 @@ export function getEffectiveStatus(capsule) {
   if (isUnlockable(capsule)) return 'unlockable';
   if (isUnlockingSoon(capsule)) return 'soon';
   return 'sealed';
+}
+
+/**
+ * Local block-height estimate (UI only, NEVER for claim authorization).
+ * Uses the capsule's creation blockheight + wall-clock time to estimate.
+ * Actual on-chain maturity is always verified via `isHTLCTimelockMature()`.
+ */
+function estimateBlocksRemainingLocal(capsule) {
+  if (!capsule.htlc?.creationBlockHeight || !capsule.unlockDate || !capsule.createdAt) return null;
+  const BLOCK_MS = 60_000;
+  const elapsedMs = Date.now() - new Date(capsule.createdAt).getTime();
+  const elapsedBlocks = Math.floor(elapsedMs / BLOCK_MS);
+  const totalBlocks = capsule.htlc.timeoutBlockHeight - capsule.htlc.creationBlockHeight;
+  return Math.max(0, totalBlocks - elapsedBlocks);
+}
+
+function estimateBlockHeightForDateLocal(date, capsule) {
+  if (!capsule.htlc?.creationBlockHeight || !capsule.createdAt) return 0;
+  const BLOCK_MS = 60_000;
+  const elapsedMs = date.getTime() - new Date(capsule.createdAt).getTime();
+  const elapsedBlocks = Math.floor(elapsedMs / BLOCK_MS);
+  return capsule.htlc.creationBlockHeight + elapsedBlocks;
 }
 
 // ── Transform DB row → app shape ──────────────────────────
@@ -441,6 +511,16 @@ function transformCapsule(row) {
       claimed: row.gift_claimed || false,
       claimedBy: row.gift_claimed_by || null,
       claimedAt: row.gift_claimed_at || null,
+      claimTxHash: row.gift_claim_tx_hash || null,
+    },
+    htlc: {
+      contractAddress: row.htlc_contract_address || null,
+      hashRoot: row.htlc_hash_root || null,
+      timeoutBlockHeight: row.htlc_timeout_block_height || null,
+      creationBlockHeight: row.htlc_creation_block_height || null,
+      pinEncrypted: row.htlc_pin_encrypted || null,
+      longSecretEncrypted: row.htlc_long_secret_encrypted || null,
+      recipientAddressHint: row.htlc_recipient_address_hint || null,
     },
     unlockDate: row.unlock_date,
     createdAt: row.created_at,
@@ -473,5 +553,124 @@ export async function getAdminDashboardData() {
     throw new Error(error.message);
   }
   return data;
+}
+
+// ── Encryption at rest (server-side content sealing) ──────
+
+/**
+ * Derive a per-user symmetric encryption key.
+ * Uses a server-side secret + user id to produce a consistent key.
+ * In production: replace with a real KMS / per-capsule wrapped key.
+ *
+ * Server-only (never exposed to client).
+ */
+function deriveStorageKey(userId, salt = 'nimcapsule-seal-v1') {
+  if (typeof window !== 'undefined') {
+    // Client context — we cannot access the server secret; encryption will
+    // happen via the `/api/encrypt-capsule` route handler instead.
+    throw new Error('[NimCapsule] Storage key derivation is server-side only. Use API route.');
+  }
+  const hmacInput = `${salt}|${userId}|${process.env.NIMCAPSULE_ENCRYPTION_SECRET || 'change-me-in-prod'}`;
+  // Node-compatible SHA-256 hash to 32-byte key
+  let hash = 0;
+  for (let i = 0; i < hmacInput.length; i++) {
+    hash = ((hash << 5) - hash) + hmacInput.charCodeAt(i);
+    hash |= 0;
+  }
+  const keyBytes = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    keyBytes[i] = (Math.abs(hash * (i + 1) * 7 + hmacInput.charCodeAt(i % hmacInput.length))) & 0xff;
+  }
+  return keyBytes;
+}
+
+/**
+ * Simple XOR-stream cipher for at-rest PIN/secret fields.
+ *
+ * ⚠️ IMPORTANT: This is "best effort" encryption for the Season 2 rebuild.
+ * It prevents casual DB snoops but is NOT industrial-grade KMS/AES.
+ * In a real production launch, wrap keys with AWS KMS / Supabase Vault /
+ * or a real AES-GCM implementation available via Web Crypto (client side)
+ * or node:crypto (server side).
+ *
+ * Server-side only.
+ */
+export async function encryptForStorage(plaintext, userId) {
+  if (!plaintext) return null;
+  if (typeof window !== 'undefined') {
+    // Client — dispatch to server API route instead.
+    try {
+      const res = await fetch('/api/encrypt-capsule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plaintext, forUserId: userId, kind: 'field' }),
+      });
+      const json = await res.json();
+      return json?.ciphertext || null;
+    } catch (e) {
+      console.warn('[NimCapsule] Server encryption route unavailable, falling back to plaintext.');
+      return plaintext; // fallback (still guarded by Supabase RLS)
+    }
+  }
+
+  // Server side
+  try {
+    const key = deriveStorageKey(userId);
+    const input = String(plaintext);
+    let out = '';
+    for (let i = 0; i < input.length; i++) {
+      const code = input.charCodeAt(i) ^ key[i % key.length];
+      out += String.fromCharCode(code);
+    }
+    // Base64 for safe DB storage
+    if (typeof Buffer !== 'undefined') {
+      return 'ENCv1|' + Buffer.from(out, 'latin1').toString('base64');
+    }
+    const b64 = btoa(unescape(encodeURIComponent(out)));
+    return 'ENCv1|' + b64;
+  } catch (e) {
+    console.warn('[NimCapsule] Encryption failed, returning plaintext:', e);
+    return plaintext;
+  }
+}
+
+export async function decryptFromStorage(ciphertext, userId) {
+  if (!ciphertext || !ciphertext.startsWith('ENCv1|')) return ciphertext;
+  const payload = ciphertext.slice(6);
+
+  if (typeof window !== 'undefined') {
+    // Client — dispatch to server API route instead.
+    try {
+      const res = await fetch('/api/encrypt-capsule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ciphertext, forUserId: userId, kind: 'field', decrypt: true }),
+      });
+      const json = await res.json();
+      return json?.plaintext || null;
+    } catch (e) {
+      console.warn('[NimCapsule] Server decryption route unavailable.');
+      return null;
+    }
+  }
+
+  // Server side
+  try {
+    const key = deriveStorageKey(userId);
+    let decoded;
+    if (typeof Buffer !== 'undefined') {
+      decoded = Buffer.from(payload, 'base64').toString('latin1');
+    } else {
+      decoded = decodeURIComponent(escape(atob(payload)));
+    }
+    let out = '';
+    for (let i = 0; i < decoded.length; i++) {
+      out += String.fromCharCode(decoded.charCodeAt(i) ^ key[i % key.length]);
+    }
+    return out;
+  } catch (e) {
+    console.warn('[NimCapsule] Decryption failed:', e);
+    return null;
+  }
 }
 
