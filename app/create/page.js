@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -34,6 +34,8 @@ import {
   createHTLC,
   getStoredNimiqAddress,
   connectNimiqWallet,
+  getHTLCSupport,
+  HTLC_UNSUPPORTED_MESSAGE,
 } from '../lib/nimiq';
 import { buildHTLCParams, verifySecret } from '../lib/htlc';
 import NimiqWalletButton from '../components/NimiqWalletButton';
@@ -93,6 +95,12 @@ export default function CreateCapsulePage() {
   const [recipientAddress, setRecipientAddress] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'sending' | 'sent' | 'failed'
+  const [htlcSupport, setHtlcSupport] = useState({ supported: true, via: null }); // optimistic until mounted
+
+  // Detect whether the connected wallet can actually lock NIM in an HTLC.
+  useEffect(() => {
+    setHtlcSupport(getHTLCSupport());
+  }, []);
 
   // Step 4
   const [unlockDate, setUnlockDate] = useState('');
@@ -126,6 +134,10 @@ export default function CreateCapsulePage() {
         }
         return true;
       case 3:
+        if (giftEnabled && !htlcSupport.supported) {
+          setError(HTLC_UNSUPPORTED_MESSAGE);
+          return false;
+        }
         return true;
       case 4:
         if (!unlockDate) {
@@ -144,7 +156,7 @@ export default function CreateCapsulePage() {
       default:
         return true;
     }
-  }, [step, title, occasion, message, unlockDate, recipientEmail]);
+  }, [step, title, occasion, message, unlockDate, recipientEmail, giftEnabled, htlcSupport]);
 
   const handleNext = () => {
     if (!validate()) return;
@@ -173,6 +185,9 @@ export default function CreateCapsulePage() {
       let txHash = null;
 
       if (giftEnabled && giftAmount > 0) {
+        if (!htlcSupport.supported) {
+          throw new Error(HTLC_UNSUPPORTED_MESSAGE);
+        }
         // Use creator's wallet as recipient fallback if none entered.
         // In a full claim flow the recipient provides their own address.
         const recipient = recipientAddress.trim() || getStoredNimiqAddress() || '';
@@ -652,6 +667,27 @@ export default function CreateCapsulePage() {
                 <div className={styles.toggleKnob} />
               </button>
             </div>
+
+            {giftEnabled && !htlcSupport.supported && (
+              <div style={{
+                marginTop: '16px',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: 'rgba(178, 58, 58, 0.06)',
+                border: '1px solid rgba(178, 58, 58, 0.25)',
+                fontSize: '13px',
+                lineHeight: 1.6,
+                color: '#8A2E2E',
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertCircle size={14} />
+                  NIM gifts aren&apos;t available in this wallet yet
+                </div>
+                Locking NIM until the unlock date needs an on-chain time-locked contract (HTLC),
+                which this wallet can&apos;t create. To keep your NIM safe we won&apos;t send it anywhere.
+                Turn the gift off to seal the capsule without one.
+              </div>
+            )}
 
             {giftEnabled && (
               <>

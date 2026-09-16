@@ -148,13 +148,21 @@ export async function getNimiqAuthIdentity() {
 export async function loadNimiqHubScript() {
   if (typeof window === 'undefined') return false;
   if (window.NimiqHubApi) return true;
+  if (window.HubApi) {
+    window.NimiqHubApi = window.HubApi;
+    return true;
+  }
 
   if (!hubScriptPromise) {
     hubScriptPromise = new Promise((resolve) => {
       const script = document.createElement('script');
-      script.src = 'https://hub.nimiq.com/RPC.js';
+      // Official standalone UMD build; exposes the global `HubApi`.
+      script.src = 'https://cdn.jsdelivr.net/npm/@nimiq/hub-api@1.15.0/dist/standalone/HubApi.standalone.umd.js';
       script.async = true;
-      script.onload = () => resolve(true);
+      script.onload = () => {
+        if (window.HubApi) window.NimiqHubApi = window.HubApi;
+        resolve(Boolean(window.NimiqHubApi));
+      };
       script.onerror = () => resolve(false);
       document.head.appendChild(script);
     });
@@ -228,8 +236,10 @@ export async function sendNimiqTransaction({ recipient, amountNim = 1, feePerByt
       const res = await window.nimiq.sendBasicTransaction({
         recipient: normalizeNimiqAddress(recipient),
         value: lunas,
-        feePerByte,
       });
+      if (res && typeof res === 'object' && res.error) {
+        return { success: false, error: res.error.message || 'Wallet rejected the transaction.' };
+      }
       const txHash = typeof res === 'string' ? res : res?.hash || 'nimiq_tx_success';
       return { success: true, txHash };
     } catch (err) {
@@ -295,25 +305,27 @@ export async function createHTLC({
     feePerByte,
   };
 
-  // 1. Nimiq Host SDK
+  // 1. Nimiq Host SDK (only if the host actually exposes HTLC creation)
   if (window.nimiq && typeof window.nimiq.createHTLC === 'function') {
     try {
       const res = await window.nimiq.createHTLC(params);
+      if (res && typeof res === 'object' && res.error) {
+        return { success: false, error: res.error.message || 'Wallet rejected the HTLC transaction.' };
+      }
       const txHash = typeof res === 'string' ? res : res?.hash || res?.txHash;
       const contractAddress = res?.contractAddress || res?.address;
       return { success: true, txHash: txHash || 'htlc_tx_success', contractAddress };
     } catch (err) {
       console.warn('[NimCapsule] Nimiq host createHTLC error:', err);
-      // Fall through to basic send-as-holder pattern if host doesn't support native HTLC
+      return { success: false, error: err?.message || 'Failed to create HTLC in wallet.' };
     }
   }
 
-  // 2. Hub API checkout with HTLC intent (or fall back to holding wallet pattern)
+  // 2. Nimiq Hub API (browser) — only if this Hub build exposes HTLC creation
   try {
     const loaded = await loadNimiqHubScript();
     if (loaded && window.NimiqHubApi) {
       const hubApi = new window.NimiqHubApi('https://hub.nimiq.com');
-      // Hub may support htlc checkout; otherwise we treat sendBasic with contractAddress derivation
       if (typeof hubApi.createHTLC === 'function') {
         const res = await hubApi.createHTLC({ appName: 'NimCapsule', ...params });
         const txHash = res?.hash || res?.transactionHash;
@@ -322,33 +334,35 @@ export async function createHTLC({
       }
     }
   } catch (err) {
-    console.warn('[NimCapsule] Hub HTLC unavailable, using holder-address pattern:', err);
+    console.warn('[NimCapsule] Hub HTLC creation error:', err);
+    return { success: false, error: err?.message || 'Failed to create HTLC via Nimiq Hub.' };
   }
 
-  // 3. FALLBACK: Derive a deterministic HTLC-holder address from hash+timeout
-  //    (In production, native HTLC on Nimiq Albatross is preferred. This fallback
-  //     still enforces client-side hashlock/PIN check during claim, and the timelock
-  //     enforces refund-when-expired on chain via subsequent transaction.)
-  try {
-    const derivedHolder = deriveHTLCHolderAddress(hashRoot, timeoutBlockHeight, recipientAddress);
-    const res = await sendNimiqTransaction({
-      recipient: derivedHolder,
-      amountNim,
-      feePerByte,
-    });
-    if (res?.success) {
-      return {
-        success: true,
-        txHash: res.txHash,
-        contractAddress: derivedHolder,
-        fallbackMode: true,
-        note: 'Fallback: funds locked to derived HTLC holder. Native HTLC used when available.',
-      };
-    }
-    return res;
-  } catch (err) {
-    return { success: false, error: err.message || 'Failed to lock funds in HTLC.' };
+  // 3. No HTLC support in this environment → fail closed. Never send funds to
+  //    a made-up "holder" address: nobody holds its key and the NIM is lost.
+  return {
+    success: false,
+    unsupported: true,
+    error: HTLC_UNSUPPORTED_MESSAGE,
+  };
+}
+
+/** Shown when the connected wallet cannot create an on-chain HTLC. */
+export const HTLC_UNSUPPORTED_MESSAGE =
+  'Your Nimiq wallet cannot lock NIM in a time-locked contract yet, so the gift was not sent. ' +
+  'Turn off the NIM gift to seal this capsule, or attach the gift once HTLC support is available.';
+
+/**
+ * Can the current environment create an on-chain HTLC?
+ * Synchronous check of the injected Nimiq Pay provider; the Hub path is
+ * browser-only and resolved lazily inside createHTLC.
+ */
+export function getHTLCSupport() {
+  if (typeof window === 'undefined') return { supported: false, via: null };
+  if (window.nimiq && typeof window.nimiq.createHTLC === 'function') {
+    return { supported: true, via: 'host' };
   }
+  return { supported: false, via: null };
 }
 
 /**
@@ -508,26 +522,5 @@ export async function getNimiqBalance(address) {
   return { success: false, balance: 0, error: 'Balance unavailable. Connect Nimiq wallet.' };
 }
 
-// ── HTLC Fallback Helpers ─────────────────────────────────
-
-/**
- * Deterministically derive a synthetic HTLC-holder address from hashlock params.
- * Used ONLY when the host/runtime doesn't expose native HTLC creation APIs.
- * This still provides a provable link between the capsule record and the on-chain
- * locked funds, while client-side software enforces PIN + timelock verification.
- *
- * NOTE: Native Nimiq HTLC (Albatross contracts) is always preferred when available.
- */
-export function deriveHTLCHolderAddress(hashRoot, timeoutBlockHeight, recipientAddress) {
-  // Build a 32-char payload from the inputs; prefix with Nimiq-style HRP.
-  const cleanRecipient = normalizeNimiqAddress(recipientAddress).slice(-20);
-  const hashPart = String(hashRoot || '').slice(0, 8).toUpperCase();
-  const timeoutHex = Number(timeoutBlockHeight || 0).toString(16).toUpperCase().padStart(8, '0').slice(-8);
-  const payload = `HTLC${hashPart}${timeoutHex}${cleanRecipient}`.padEnd(32, '0').slice(0, 32);
-  // Simple modulo-97 Nimiq checksum (approximation for display; actual address validated by wallet)
-  const checksumSource = payload.split('').map((c, i) => c.charCodeAt(0) * (i + 1)).reduce((a, b) => a + b, 0);
-  const checksum = String(98 - (checksumSource % 97)).padStart(2, '0');
-  return `NQ${checksum}${payload}`;
-}
 
 export { getHostLanguage };

@@ -125,7 +125,7 @@ libraries at all. (See S1 judge feedback → the EVM stack was completely remove
 
 | File | What |
 |---|---|
-| [`app/lib/nimiq.js`](./app/lib/nimiq.js#L1-L475) | Full SDK wrapper: wallet connect, block height, balance, **`createHTLC` / `claimHTLC` / `refundHTLC`**, fallback holder-address derivation |
+| [`app/lib/nimiq.js`](./app/lib/nimiq.js#L1-L475) | Full SDK wrapper: wallet connect, block height, balance, **`createHTLC` / `claimHTLC` / `refundHTLC`** (fail closed when the wallet has no HTLC support — funds are never sent to a placeholder address) |
 | [`app/lib/htlc.js`](./app/lib/htlc.js#L1-L258) | HTLC layer on top of SDK: `buildHTLCParams`, `sha256Hex`, `dateToTimeoutBlockHeight`, `isHTLCTimelockMature`, `verifySecret` |
 | [`app/create/page.js`](./app/create/page.js#L142-L220) | Seal flow → `buildHTLCParams` → `createHTLC` (replaces the old burn-address `sendNimiqTransaction`) |
 | [`app/capsule/[id]/page.js`](./app/capsule/[id]/page.js#L87-L200) | Open flow → on-chain `isHTLCTimelockMature` → PIN `verifySecret` → **`claimHTLC`** pays recipient on-chain |
@@ -141,7 +141,7 @@ libraries at all. (See S1 judge feedback → the EVM stack was completely remove
 
 When the app runs in a **regular browser** instead of inside Nimiq Pay, the wrapper
 automatically falls back to:
-1. **Nimiq Hub `RPC.js`** (`https://hub.nimiq.com/RPC.js`) → `chooseAddress` + `checkout`
+1. **Nimiq Hub API** (`@nimiq/hub-api` standalone bundle via jsDelivr) → `chooseAddress` + `checkout`
 2. **Public Albatross JSON-RPC** (`https://rpc.nimiqwatch.com`, override with `NEXT_PUBLIC_NIMIQ_RPC_URL`) → `getBlockNumber` / `getAccountByAddress` queries
 
 ---
