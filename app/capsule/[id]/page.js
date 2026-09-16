@@ -254,7 +254,14 @@ export default function CapsuleDetailPage({ params }) {
 
     // Double-check chain timelock has matured (authoritative)
     if (capsule?.htlc?.timeoutBlockHeight) {
-      const maturity = await isHTLCTimelockMature(capsule.htlc.timeoutBlockHeight);
+      let maturity;
+      try {
+        maturity = await isHTLCTimelockMature(capsule.htlc.timeoutBlockHeight);
+      } catch (err) {
+        console.warn('[NimCapsule] Chain verification failed:', err);
+        setPinError('Could not reach the Nimiq network to verify the time-lock. Please try again.');
+        return false;
+      }
       if (!maturity.isMature) {
         setPinError(`Still locked on-chain. ${maturity.blocksUntilMature ?? ''} blocks remaining.`);
         return false;
@@ -1044,10 +1051,9 @@ export default function CapsuleDetailPage({ params }) {
 }
 
 // ── Mini inline wallet button variant (for claim form) ──
-import { useEffect, useState as _useState } from 'react';
 function NimiqWalletButtonStandalone({ onAddress, compact = false }) {
-  const [addr, setAddr] = _useState('');
-  const [loading, setLoading] = _useState(false);
+  const [addr, setAddr] = useState('');
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? getStoredNimiqAddress() : '';
     if (stored) {
