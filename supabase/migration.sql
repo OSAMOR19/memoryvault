@@ -161,51 +161,44 @@ CREATE INDEX IF NOT EXISTS idx_capsule_photos_capsule_id ON public.capsule_photo
 -- ════════════════════════════════════════════════════════════
 -- STORAGE BUCKET SETUP
 -- ════════════════════════════════════════════════════════════
--- Note: The bucket itself must be created via Supabase Dashboard:
---   Storage → New Bucket → "capsule-photos" (public, 5MB limit)
+-- Creates the "capsule-photos" bucket (public, 5MB limit) if it does not
+-- exist, then secures it so users can only upload/delete files in their
+-- own folder (path: {user_id}/{capsule_id}/{filename}).
 --
--- The policies below secure access so users can only upload/delete
--- files in their own folder (path: userId/capsuleId/filename).
+-- Supabase no longer has a `storage.policies` table; bucket access is
+-- plain Postgres RLS on `storage.objects`.
 -- ════════════════════════════════════════════════════════════
 
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('capsule-photos', 'capsule-photos', true, 5242880)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+
 -- Allow authenticated users to upload to their own folder
--- Path format: {user_id}/{capsule_id}/{filename}
--- storage.foldername(name)[1] extracts the first folder = user_id
-INSERT INTO storage.policies (name, bucket_id, operation, definition, check_expression)
-SELECT
-  'Users can upload own photos',
-  'capsule-photos',
-  'INSERT',
-  NULL,
-  $$(bucket_id = 'capsule-photos' AND auth.uid()::text = (storage.foldername(name))[1])$$
-WHERE NOT EXISTS (
-  SELECT 1 FROM storage.policies
-  WHERE name = 'Users can upload own photos' AND bucket_id = 'capsule-photos'
-);
+-- (storage.foldername(name))[1] extracts the first folder = user_id
+DROP POLICY IF EXISTS "Users can upload own photos" ON storage.objects;
+CREATE POLICY "Users can upload own photos"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'capsule-photos'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
 
 -- Allow anyone to view photos (public bucket)
-INSERT INTO storage.policies (name, bucket_id, operation, definition)
-SELECT
-  'Public photo access',
-  'capsule-photos',
-  'SELECT',
-  $$(bucket_id = 'capsule-photos')$$
-WHERE NOT EXISTS (
-  SELECT 1 FROM storage.policies
-  WHERE name = 'Public photo access' AND bucket_id = 'capsule-photos'
-);
+DROP POLICY IF EXISTS "Public photo access" ON storage.objects;
+CREATE POLICY "Public photo access"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'capsule-photos');
 
 -- Allow users to delete their own photos
-INSERT INTO storage.policies (name, bucket_id, operation, definition)
-SELECT
-  'Users can delete own photos',
-  'capsule-photos',
-  'DELETE',
-  $$(bucket_id = 'capsule-photos' AND auth.uid()::text = (storage.foldername(name))[1])$$
-WHERE NOT EXISTS (
-  SELECT 1 FROM storage.policies
-  WHERE name = 'Users can delete own photos' AND bucket_id = 'capsule-photos'
-);
+DROP POLICY IF EXISTS "Users can delete own photos" ON storage.objects;
+CREATE POLICY "Users can delete own photos"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'capsule-photos'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
 
 -- ── Table 4: notifications ────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.notifications (
