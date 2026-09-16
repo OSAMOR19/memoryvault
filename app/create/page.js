@@ -22,6 +22,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { addCapsule } from '../lib/storage';
+import { getSession } from '../lib/auth';
 import {
   addMonths,
   addYears,
@@ -66,6 +67,8 @@ const QUICK_DATES = [
 
 const TOTAL_STEPS = 4;
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function CreateCapsulePage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
@@ -88,6 +91,8 @@ export default function CreateCapsulePage() {
   const [giftEnabled, setGiftEnabled] = useState(false);
   const [giftAmount, setGiftAmount] = useState(10);
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [inviteStatus, setInviteStatus] = useState(null); // null | 'sending' | 'sent' | 'failed'
 
   // Step 4
   const [unlockDate, setUnlockDate] = useState('');
@@ -131,11 +136,15 @@ export default function CreateCapsulePage() {
           setError('The unlock date must be in the future.');
           return false;
         }
+        if (recipientEmail.trim() && !EMAIL_RE.test(recipientEmail.trim())) {
+          setError('Enter a valid recipient email address, or leave it blank.');
+          return false;
+        }
         return true;
       default:
         return true;
     }
-  }, [step, title, occasion, message, unlockDate]);
+  }, [step, title, occasion, message, unlockDate, recipientEmail]);
 
   const handleNext = () => {
     if (!validate()) return;
@@ -215,6 +224,7 @@ export default function CreateCapsulePage() {
         photos,
         gift: { enabled: giftEnabled, amount: giftEnabled ? giftAmount : 0, txHash },
         unlockDate: new Date(unlockDate).toISOString(),
+        recipientEmail: recipientEmail.trim() || null,
         htlc: {
           contractAddress: htlcResult?.contractAddress || null,
           hashRoot: htlcParams?.hashRoot || null,
@@ -229,6 +239,37 @@ export default function CreateCapsulePage() {
       // ── 4. Reveal PIN to the CREATOR ONLY ONCE (for sharing) ──
       //    This PIN is the hashlock preimage. Without it, nobody can claim.
       setCreatedCapsuleId(capsule.id);
+
+      // ── 3b. Email the recipient their link (+ claim code for NIM gifts) ──
+      //     Fire-and-forget: a mail failure must never undo a sealed capsule.
+      if (recipientEmail.trim()) {
+        setInviteStatus('sending');
+        (async () => {
+          try {
+            const me = await getSession().catch(() => null);
+            const res = await fetch('/api/send-recipient-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: recipientEmail.trim(),
+                capsuleId: capsule.id,
+                senderName: me?.name || me?.email || '',
+                capsuleTitle: title.trim(),
+                occasion,
+                unlockDate: new Date(unlockDate).toISOString(),
+                giftAmount: giftEnabled ? giftAmount : 0,
+                claimCode: htlcParams?.pin || null,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            setInviteStatus(res.ok && data?.success ? 'sent' : 'failed');
+          } catch (mailErr) {
+            console.error('[NimCapsule] Recipient email failed:', mailErr);
+            setInviteStatus('failed');
+          }
+        })();
+      }
+
       if (htlcParams?.pin) {
         setRevealedPIN(htlcParams.pin);
         setRevealedLongSecret(htlcParams.longSecret || '');
@@ -316,6 +357,21 @@ export default function CreateCapsulePage() {
           <p className={styles.sealSubtext}>
             It will sleep until {formatLong(unlockDate)}
           </p>
+
+          {recipientEmail.trim() && inviteStatus && (
+            <p style={{
+              marginTop: '10px',
+              fontSize: '13px',
+              lineHeight: 1.5,
+              color: inviteStatus === 'failed' ? '#B23A3A' : '#4F6D5A',
+              textAlign: 'center',
+              maxWidth: '420px',
+            }}>
+              {inviteStatus === 'sending' && `Sending the capsule link to ${recipientEmail.trim()}…`}
+              {inviteStatus === 'sent' && `We emailed the capsule link${revealedPIN ? ' and claim code' : ''} to ${recipientEmail.trim()}.`}
+              {inviteStatus === 'failed' && `We couldn't email ${recipientEmail.trim()}. Share the link${revealedPIN ? ' and claim code' : ''} below yourself.`}
+            </p>
+          )}
 
           {/* ═══ CLAIM PIN REVEAL (gift capsules only) ═══ */}
           {revealedPIN && (
@@ -730,6 +786,50 @@ export default function CreateCapsulePage() {
                 onChange={handleDateChange}
                 min={toInputFormat(new Date(Date.now() + 86400000))}
               />
+            </div>
+
+            {/* Recipient email (optional) — they get the link + claim code by email */}
+            <div style={{ width: '100%', marginTop: '24px', textAlign: 'left' }}>
+              <label
+                htmlFor="recipient-email"
+                style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#1A1A1A',
+                  marginBottom: '8px',
+                }}
+              >
+                Recipient&apos;s Email <span style={{ color: '#9E9E9E', fontWeight: 400 }}>(optional)</span>
+              </label>
+              <input
+                id="recipient-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="them@example.com"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                maxLength={254}
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  border: '1px solid #E0DCD5',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  background: '#FAFAF7',
+                }}
+              />
+              <p style={{
+                fontSize: '12px',
+                color: '#9E9E9E',
+                marginTop: '6px',
+                lineHeight: 1.5,
+              }}>
+                We&apos;ll email them the capsule link as soon as it&apos;s sealed
+                {giftEnabled && giftAmount > 0 ? ', together with the claim code for the NIM gift' : ''}.
+                The message itself stays locked until the unlock date.
+              </p>
             </div>
 
             {unlockDate && (

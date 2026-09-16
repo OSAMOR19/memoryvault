@@ -9,6 +9,44 @@ export const NIMIQ_LUNAS_PER_NIM = 1e5; // 1 NIM = 100,000 Lunas
 export const NIMIQ_BLOCK_TIME_MS = 60_000; // ~1 minute per block (mainnet average)
 export const NIMIQ_CURRENT_BLOCK_HEIGHT_FALLBACK = 0; // fallback if RPC unavailable
 
+// Public Albatross JSON-RPC endpoints, tried in order. Override/prepend with
+// NEXT_PUBLIC_NIMIQ_RPC_URL. (rpc.nimiq.com does not exist — do not use it.)
+export const NIMIQ_RPC_URLS = [
+  process.env.NEXT_PUBLIC_NIMIQ_RPC_URL,
+  'https://rpc.nimiqwatch.com/',
+].filter(Boolean);
+
+/**
+ * Minimal JSON-RPC client for the Nimiq Albatross node API.
+ * Albatross wraps results as `{ data, metadata }`; this unwraps `data`.
+ * Throws if every endpoint fails.
+ */
+export async function nimiqRpc(method, params = []) {
+  if (typeof fetch !== 'function') throw new Error('fetch is not available in this environment.');
+  let lastErr = null;
+  for (const url of NIMIQ_RPC_URLS) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', method, params, id: Date.now() }),
+      });
+      if (!res.ok) throw new Error(`Nimiq RPC ${url} responded ${res.status}`);
+      const json = await res.json();
+      if (json?.error) {
+        const msg = typeof json.error === 'string' ? json.error : json.error?.message;
+        throw new Error(msg || 'Nimiq RPC error');
+      }
+      const result = json?.result;
+      return result && typeof result === 'object' && 'data' in result ? result.data : result;
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[NimCapsule] Nimiq RPC ${method} via ${url} failed:`, err?.message || err);
+    }
+  }
+  throw lastErr || new Error('No Nimiq RPC endpoint reachable.');
+}
+
 // Standard Nimiq HTLC contract opcode prefixes (for reference & address derivation)
 export const NIMIQ_HTLC_CONTRACT_PREFIX = 'HTLC';
 
@@ -420,7 +458,7 @@ export async function refundHTLC({ contractAddress, creatorAddress, feePerByte =
  */
 export async function getCurrentBlockHeight() {
   // 1. Nimiq Host SDK
-  if (window.nimiq && typeof window.nimiq.getBlockHeight === 'function') {
+  if (typeof window !== 'undefined' && window.nimiq && typeof window.nimiq.getBlockHeight === 'function') {
     try {
       const height = await window.nimiq.getBlockHeight();
       if (height) return Number(height);
@@ -429,29 +467,13 @@ export async function getCurrentBlockHeight() {
     }
   }
 
-  // 2. Public Nimiq RPC endpoint (fallback, client-side fetch)
-  if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
-    try {
-      const res = await fetch('https://rpc.nimiq.com/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'blockNumber',
-          params: [],
-          id: 1,
-        }),
-      });
-      const json = await res.json();
-      if (json?.result) {
-        // RPC returns hex for blockNumber; convert to decimal
-        return typeof json.result === 'string' && json.result.startsWith('0x')
-          ? parseInt(json.result, 16)
-          : Number(json.result);
-      }
-    } catch (err) {
-      console.warn('[NimCapsule] Public RPC block height fetch failed:', err);
-    }
+  // 2. Public Albatross RPC (`getBlockNumber`), works client- and server-side
+  try {
+    const raw = await nimiqRpc('getBlockNumber');
+    const height = typeof raw === 'string' && raw.startsWith('0x') ? parseInt(raw, 16) : Number(raw);
+    if (Number.isFinite(height) && height > 0) return height;
+  } catch (err) {
+    console.warn('[NimCapsule] Public RPC block height fetch failed:', err?.message || err);
   }
 
   return NIMIQ_CURRENT_BLOCK_HEIGHT_FALLBACK;
@@ -464,7 +486,7 @@ export async function getNimiqBalance(address) {
   if (!address) return { success: false, error: 'Address required.', balance: 0 };
   const normalized = normalizeNimiqAddress(address);
 
-  if (window.nimiq && typeof window.nimiq.getBalance === 'function') {
+  if (typeof window !== 'undefined' && window.nimiq && typeof window.nimiq.getBalance === 'function') {
     try {
       const lunas = await window.nimiq.getBalance(normalized);
       return { success: true, balance: lunasToNim(lunas) };
@@ -473,29 +495,14 @@ export async function getNimiqBalance(address) {
     }
   }
 
-  // Fallback: public RPC getBalance
-  if (typeof window !== 'undefined') {
-    try {
-      const res = await fetch('https://rpc.nimiq.com/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'getBalance',
-          params: [normalized],
-          id: 2,
-        }),
-      });
-      const json = await res.json();
-      if (json?.result != null) {
-        const lunas = typeof json.result === 'string' && json.result.startsWith('0x')
-          ? parseInt(json.result, 16)
-          : Number(json.result);
-        return { success: true, balance: lunasToNim(lunas) };
-      }
-    } catch (err) {
-      console.warn('[NimCapsule] Public RPC balance fetch failed:', err);
+  // Fallback: public Albatross RPC `getAccountByAddress` → { balance } in lunas
+  try {
+    const account = await nimiqRpc('getAccountByAddress', [normalized]);
+    if (account && account.balance != null) {
+      return { success: true, balance: lunasToNim(Number(account.balance)) };
     }
+  } catch (err) {
+    console.warn('[NimCapsule] Public RPC balance fetch failed:', err?.message || err);
   }
 
   return { success: false, balance: 0, error: 'Balance unavailable. Connect Nimiq wallet.' };

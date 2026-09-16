@@ -142,7 +142,7 @@ libraries at all. (See S1 judge feedback → the EVM stack was completely remove
 When the app runs in a **regular browser** instead of inside Nimiq Pay, the wrapper
 automatically falls back to:
 1. **Nimiq Hub `RPC.js`** (`https://hub.nimiq.com/RPC.js`) → `chooseAddress` + `checkout`
-2. **Public JSON-RPC** (`https://rpc.nimiq.com`) → `blockNumber` / `getBalance` queries
+2. **Public Albatross JSON-RPC** (`https://rpc.nimiqwatch.com`, override with `NEXT_PUBLIC_NIMIQ_RPC_URL`) → `getBlockNumber` / `getAccountByAddress` queries
 
 ---
 

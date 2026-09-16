@@ -69,9 +69,7 @@ export async function addCapsule(capsuleData) {
     : null;
 
   // Insert capsule row
-  const { data: capsule, error } = await supabase
-    .from('capsules')
-    .insert({
+  const row = {
       user_id: session.user.id,
       title: capsuleData.title || 'Untitled Capsule',
       occasion: capsuleData.occasion || 'custom',
@@ -89,9 +87,22 @@ export async function addCapsule(capsuleData) {
       htlc_pin_encrypted: pinEncrypted,
       htlc_long_secret_encrypted: longSecretEncrypted,
       htlc_recipient_address_hint: capsuleData.htlc?.recipientAddressHint || null,
-    })
+      // Who this capsule is for (optional) — used to email them the link
+      recipient_email: capsuleData.recipientEmail || null,
+  };
+
+  let { data: capsule, error } = await supabase
+    .from('capsules')
+    .insert(row)
     .select()
     .single();
+
+  // Graceful fallback if the DB hasn't been migrated yet (see supabase/migration_s2_htlc.sql)
+  if (error && /recipient_email/i.test(error.message || '')) {
+    console.warn('[NimCapsule] capsules.recipient_email column missing — run supabase/migration_s2_htlc.sql. Saving capsule without it.');
+    delete row.recipient_email;
+    ({ data: capsule, error } = await supabase.from('capsules').insert(row).select().single());
+  }
 
   if (error) throw new Error(error.message);
 
@@ -522,6 +533,7 @@ function transformCapsule(row) {
       longSecretEncrypted: row.htlc_long_secret_encrypted || null,
       recipientAddressHint: row.htlc_recipient_address_hint || null,
     },
+    recipientEmail: row.recipient_email || null,
     unlockDate: row.unlock_date,
     createdAt: row.created_at,
     openedAt: row.opened_at,
